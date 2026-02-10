@@ -27,6 +27,11 @@ Flag threaded
     Default: True
     Manual: True
 
+Flag plinth
+    Description: Build with the Plinth backend
+    Default: False
+    Manual: True
+
 Executable ghc
     Default-Language: Haskell2010
 
@@ -84,6 +89,10 @@ Executable ghc
 
     if flag(threaded)
       ghc-options: -threaded
+
+    if flag(plinth)
+      cpp-options: -DPLINTH
+      build-depends: plutus-tx-plugin
 
     Other-Extensions:
         CPP

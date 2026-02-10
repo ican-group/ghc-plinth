@@ -99,6 +99,11 @@ import Data.Bifunctor
 import GHC.Data.Graph.Directed
 import qualified Data.List.NonEmpty as NE
 
+#if defined(PLINTH)
+import qualified PlutusTx.Plugin
+import GHC.Driver.Monad (modifySession)
+#endif
+
 -----------------------------------------------------------------------------
 -- ToDo:
 
@@ -193,6 +198,11 @@ main' postLoadMode units dflags0 args flagWarnings = do
                                          DoRun    -> 0
                                          _other   -> 1
                         }
+#if defined(PLINTH)
+                            `gopt_set` Opt_ExternalInterpreter
+                            `gopt_set` Opt_WriteIfSimplifiedCore
+                            `gopt_set` Opt_PluginTrustworthy
+#endif
 
       -- turn on -fimplicit-import-qualified for GHCi now, so that it
       -- can be overridden from the command-line
@@ -259,6 +269,18 @@ main' postLoadMode units dflags0 args flagWarnings = do
 
   -- Must do this before loading plugins
   liftIO $ initUniqSupply (initialUnique dflags6) (uniqueIncrement dflags6)
+
+#if defined(PLINTH)
+  -- XXX get the -fplugin-opt to the plinth plugin
+  let plinth_static_plugin =
+        StaticPlugin (PluginWithArgs PlutusTx.Plugin.plugin [])
+      static_plugins = [plinth_static_plugin]
+
+  modifySession $ \hsc_env ->
+    let old_plugins = hsc_plugins hsc_env
+    in hsc_env { hsc_plugins = old_plugins { staticPlugins = static_plugins }
+               }
+#endif
 
   -- Initialise plugins here because the plugin author might already expect this
   -- subsequent call to `getLogger` to be affected by a plugin.
@@ -961,6 +983,9 @@ showBanner _postLoadMode dflags = do
        hPutStr stderr cProjectVersion
        hPutStr stderr ", stage "
        hPutStr stderr cStage
+#if defined(PLINTH)
+       hPutStr stderr " (Plinth)"
+#endif
        hPutStr stderr " booted by GHC version "
        hPutStrLn stderr cBooterVersion
 
@@ -991,7 +1016,12 @@ showSupportedExtensions m_top_dir = do
   mapM_ putStrLn $ supportedLanguagesAndExtensions arch_os
 
 showVersion :: IO ()
-showVersion = putStrLn (cProjectName ++ ", version " ++ cProjectVersion)
+showVersion =
+#if defined(PLINTH)
+  putStrLn (cProjectName ++ " (Plinth), version " ++ cProjectVersion)
+#else
+  putStrLn (cProjectName ++ ", version " ++ cProjectVersion)
+#endif
 
 showOptions :: Bool -> IO ()
 showOptions isInteractive = putStr (unlines availableOptions)
