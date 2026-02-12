@@ -271,9 +271,13 @@ main' postLoadMode units dflags0 args flagWarnings = do
   liftIO $ initUniqSupply (initialUnique dflags6) (uniqueIncrement dflags6)
 
 #if defined(PLINTH)
-  -- XXX get the -fplugin-opt to the plinth plugin
-  let plinth_static_plugin =
-        StaticPlugin (PluginWithArgs PlutusTx.Plugin.plugin [])
+  let plinth_plugin_mod_name = mkModuleName "PlutusTx.Plugin"
+      plinth_plugin_args = [ opt
+                           | (mod_name, opt) <- pluginModNameOpts dflags6
+                           , mod_name == plinth_plugin_mod_name
+                           ]
+      plinth_static_plugin =
+        StaticPlugin (PluginWithArgs PlutusTx.Plugin.plugin plinth_plugin_args)
       static_plugins = [plinth_static_plugin]
 
   modifySession $ \hsc_env ->
