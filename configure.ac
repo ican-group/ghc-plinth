@@ -13,11 +13,19 @@ dnl
 # see what flags are available. (Better yet, read the documentation!)
 #
 
-AC_INIT([The Glorious Glasgow Haskell Compilation System], [9.6.7.0.1501], [glasgow-haskell-bugs@haskell.org], [ghc-AC_PACKAGE_VERSION])
+AC_INIT([The Glorious Glasgow Haskell Compilation System], [9.6.1501], [glasgow-haskell-bugs@haskell.org], [ghc-AC_PACKAGE_VERSION])
     # Version on master must be X.Y (not X.Y.Z) for ProjectVersionMunged variable
     # to be useful (cf #19058). However, the version must have three components
     # (X.Y.Z) on stable branches (e.g. ghc-9.2) to ensure that pre-releases are
     # versioned correctly.
+
+    # Note for Plinth release: Up to four version components are supported and,
+    # we want a distinct version from upstream GHC. Therefore we use:
+    #  - 9.6.1501.DATE for RELEASE=NO (version in this file is [9.6.1501])
+    #  - 9.6.1501.X for RELEASE=YES (add X to version: [9.6.1501.X])
+    #
+    # In GHC 9.8+ we don't need to modify the version anymore, just the
+    # "Project Unit Id" from ghc --info
 
 AC_CONFIG_MACRO_DIRS([m4])
 
@@ -52,6 +60,10 @@ FP_PROG_SORT
 
 dnl ----------------------------------------------------------
 FP_SETUP_PROJECT_VERSION
+
+dnl Build tag for custom GHC builds (e.g. "plinth"). Leave empty for vanilla GHC.
+ProjectBuildTag="plinth"
+AC_SUBST([ProjectBuildTag])
 
 dnl Don't use AC_DEFINE because it will make C-style comments invalid for
 dnl Haskell.
