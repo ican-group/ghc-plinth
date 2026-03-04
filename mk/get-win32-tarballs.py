@@ -3,10 +3,38 @@
 
 from pathlib import Path
 import urllib.request
+import ssl
 import subprocess
 import argparse
 import sys
 from sys import stderr
+
+# On Windows (MSYS2/MinGW), Python's bundled OpenSSL may not find
+# system CA certificates. Build a context that tries multiple sources.
+def _make_ssl_context():
+    ctx = ssl.create_default_context()
+    if ctx.cert_store_stats()['x509_ca'] > 0:
+        return ctx
+    import os
+    # Try common CA bundle locations (Windows paths for native Python)
+    candidates = [os.environ.get('SSL_CERT_FILE', '')]
+    # Add Git for Windows and MSYS2 paths
+    for prefix in ['C:/Program Files/Git', 'C:/msys64']:
+        candidates.append(prefix + '/mingw64/etc/ssl/certs/ca-bundle.crt')
+        candidates.append(prefix + '/usr/ssl/certs/ca-bundle.crt')
+    for ca in candidates:
+        if ca and os.path.isfile(ca):
+            try:
+                ctx.load_verify_locations(ca)
+                return ctx
+            except Exception:
+                pass
+    return ctx
+
+_ssl_ctx = _make_ssl_context()
+_https_handler = urllib.request.HTTPSHandler(context=_ssl_ctx)
+_opener = urllib.request.build_opener(_https_handler)
+urllib.request.install_opener(_opener)
 
 TARBALL_VERSION = '0.8'
 BASE_URL = "https://downloads.haskell.org/ghc/mingw/{}".format(TARBALL_VERSION)

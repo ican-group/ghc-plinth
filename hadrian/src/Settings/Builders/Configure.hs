@@ -40,4 +40,6 @@ configureBuilderArgs = do
                             ++ (if wayUnit Dynamic way
                                     then "yes"
                                     else "no")
+                     , "--disable-multi-os-directory"
+                     , "--disable-docs"
                      , "--host=" ++ targetPlatform ] ]
