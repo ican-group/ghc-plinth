@@ -333,11 +333,14 @@ instance H.Builder Builder where
                   cmd' [Cwd dir] [bash, path] buildArgs
 
                 Configure  dir -> do
-                    -- Inject /bin/bash into `libtool`, instead of /bin/sh,
-                    -- otherwise Windows breaks. TODO: Figure out why.
-                    bash <- bashPath
-                    let env = AddEnv "CONFIG_SHELL" bash
-                    cmd' env [Cwd dir] ["sh", path] buildOptions buildArgs
+                    -- Note: we intentionally do NOT set CONFIG_SHELL here.
+                    -- Setting it causes autoconf's configure to re-exec under
+                    -- the specified shell, and on Windows this spawns a new
+                    -- MSYS2 process whose runtime may pull in conflicting
+                    -- tools (e.g. Git for Windows' expr with a different
+                    -- msys-2.0.dll) via the Windows system PATH, breaking
+                    -- autoconf's BRE-based option parsing.
+                    cmd' [Cwd dir] ["sh", path] buildOptions buildArgs
 
                 GenApply -> captureStdout
 

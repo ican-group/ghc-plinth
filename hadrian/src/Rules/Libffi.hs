@@ -124,6 +124,9 @@ fixLibffiMakefile top =
       replace "-MD" "-MMD"
     . replace "@toolexeclibdir@" "$(libdir)"
     . replace "@INSTALL@" ("$(subst ../install-sh," ++ top ++ "/install-sh,@INSTALL@)")
+    -- Remove 'man' from SUBDIRS to avoid broken man page installation on
+    -- MSYS2/Windows where the automake sed pipeline in install-man3 fails.
+    . replace "SUBDIRS = include testsuite man" "SUBDIRS = include testsuite"
 
 -- TODO: check code duplication w.r.t. ConfCcArgs
 configureEnvironment :: Stage -> Action [CmdOption]
