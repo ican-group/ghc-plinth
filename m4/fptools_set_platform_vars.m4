@@ -89,6 +89,13 @@ AC_DEFUN([FPTOOLS_OVERRIDE_PLATFORM_FROM_BOOTSTRAP],
     $2[Arch]=`echo "[$]$1" | sed 's/-.*//'`
     $2[Vendor]=`echo "[$]$1" | sed -e 's/.*-\(.*\)-.*/\1/'`
     $2[OS]=`echo "[$]$1" | sed 's/.*-//'`
+
+	# synchronize with the autotools variables, e.g.
+	# target_cpu = TargetPlatform
+	# etc.
+	$1[_cpu]=[$]$2[Arch]
+	$1[_vendor]=[$]$2[Vendor]
+	$1[_os]=[$]$2[OS]
 ])
 
 # FPTOOLS_SET_PLATFORM_VARS(platform,Platform)
