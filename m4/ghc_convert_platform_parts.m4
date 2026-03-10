@@ -6,4 +6,12 @@ AC_DEFUN([GHC_CONVERT_PLATFORM_PARTS],[
     GHC_CONVERT_CPU([$]$1[_cpu], $2[Arch])
     GHC_CONVERT_VENDOR([$]$1[_vendor], $2[Vendor])
     GHC_CONVERT_OS([$]$1[_os], [$]$2[Arch], $2[OS])
+
+	# synchronize with the autotools variables, e.g.
+	# target_cpu = TargetPlatform
+	# etc.
+	$1[_cpu]=[$]$2[Arch]
+	$1[_vendor]=[$]$2[Vendor]
+	$1[_os]=[$]$2[OS]
+	$1=[$]$1[_cpu]-[$]$1[_vendor]-[$]$1[_os]
 ])
