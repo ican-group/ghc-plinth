@@ -159,3 +159,11 @@ test('reloc-none',
                 unless(opsys('linux'), skip),
 		req_rts_linker],
 	makefile_test, ['reloc-none'])
+
+
+# Test that COMMON symbols from multiple object files are merged correctly
+test('T6107',
+     [req_rts_linker,
+      extra_files(['T6107_sym1.s', 'T6107_sym2.s'])
+     ],
+     makefile_test, ['T6107'])

@@ -145,3 +145,10 @@ reloc-none:
 	"$(TEST_HC)" load-object.c -o load-object -no-hs-main -debug
 	"$(TEST_HC)" -c reloc-none.c -o reloc-none.o
 	./load-object reloc-none.o
+
+.PHONY: T6107
+T6107:
+	"$(TEST_HC)" -c T6107_sym1.s -o T6107_sym1.o -v0
+	"$(TEST_HC)" -c T6107_sym2.s -o T6107_sym2.o -v0
+	"$(TEST_HC)" $(TEST_HC_OPTS) T6107.hs -o T6107 -v0
+	./T6107

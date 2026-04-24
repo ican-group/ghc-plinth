@@ -439,6 +439,7 @@ typedef struct _RtsSymbolInfo {
     ObjectCode *owner;
     SymStrength strength;
     SymType type;
+    unsigned long size; // symbol size: only used for COMMON symbols
 } RtsSymbolInfo;
 
 #include "BeginPrivate.h"
@@ -466,6 +467,7 @@ int ghciInsertSymbolTable(
     SymbolAddr* data,
     SymStrength weak,
     SymType type,
+    unsigned long size,
     ObjectCode *owner);
 
 /* Lock-free version of lookupSymbol. When 'dependent' is not NULL, adds it as a

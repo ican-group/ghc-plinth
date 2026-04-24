@@ -438,7 +438,7 @@ void initLinker_PEi386(void)
     if (!ghciInsertSymbolTable(WSTR("(GHCi/Ld special symbols)"),
                                symhash, "__image_base__",
                                GetModuleHandleW (NULL), HS_BOOL_TRUE,
-                               SYM_TYPE_CODE, NULL)) {
+                               SYM_TYPE_CODE, 0, NULL)) {
         barf("ghciInsertSymbolTable failed");
     }
 
@@ -1672,7 +1672,12 @@ ocGetNames_PEi386 ( ObjectCode* oc )
       if (getSymSectionNumber (info, sym) == PE_SECTION_UNDEFINED
            && getSymValue (info, sym) > 0
            && getSymStorageClass (info, sym) != IMAGE_SYM_CLASS_SECTION) {
-           globalBssSize += getSymValue (info, sym);
+           /* Only count COMMON symbols not already defined by a
+            * previously-loaded object; we will reuse their allocation. */
+           SymbolName *nm = get_sym_name (getSymShortName (info, sym), oc);
+           if (!lookupStrHashTable(symhash, nm)) {
+               globalBssSize += getSymValue (info, sym);
+           }
       }
       i += getSymNumberOfAuxSymbols (info, sym);
    }
@@ -1706,6 +1711,8 @@ ocGetNames_PEi386 ( ObjectCode* oc )
       uint8_t symStorageClass = getSymStorageClass (info, sym);
       SymbolAddr *addr = NULL;
       bool isWeak = false;
+      bool common_already_defined = false;
+      unsigned long symSize = 0;
       SymbolName *sname = get_sym_name (getSymShortName (info, sym), oc);
 
       uint32_t secNumber = getSymSectionNumber (info, sym);
@@ -1785,10 +1792,31 @@ ocGetNames_PEi386 ( ObjectCode* oc )
       }
       else if (  secNumber == IMAGE_SYM_UNDEFINED && symValue > 0) {
          /* This symbol isn't in any section at all, ie, global bss.
-            Allocate zeroed space for it from the BSS section */
-          addr = bss;
-          bss = (SymbolAddr*)((StgWord)bss + (StgWord)symValue);
-          IF_DEBUG(linker_verbose, debugBelch("bss symbol @ %p %u\n", addr, symValue));
+            Allocate zeroed space for it from the BSS section, unless a
+            previously-loaded object already allocated storage for it. */
+          RtsSymbolInfo *existing = lookupStrHashTable(symhash, sname);
+          if (existing != NULL) {
+              /* COMMON symbol already allocated by a previously-loaded
+               * object; reuse that address so relocations resolve to
+               * the same storage. */
+              if (symValue > existing->size) {
+                  barf("linker: trying to link COMMON symbols %s with"
+                       " incompatible sizes: previous size %llu,"
+                       " new size %u\n",
+                       sname,
+                       (long long unsigned int) existing->size,
+                       symValue);
+              }
+              addr = existing->value;
+              common_already_defined = true;
+              IF_DEBUG(linker_verbose,
+                       debugBelch("bss symbol reusing @ %p %u\n", addr, symValue));
+          } else {
+              addr = bss;
+              bss = (SymbolAddr*)((StgWord)bss + (StgWord)symValue);
+              symSize = (unsigned long)symValue;
+              IF_DEBUG(linker_verbose, debugBelch("bss symbol @ %p %u\n", addr, symValue));
+          }
       }
       else if (section && section->kind == SECTIONKIND_BFD_IMPORT_LIBRARY) {
           /* Disassembly of section .idata$5:
@@ -1816,7 +1844,7 @@ ocGetNames_PEi386 ( ObjectCode* oc )
           type = has_code_section ? SYM_TYPE_CODE : SYM_TYPE_DATA;
           type |= SYM_TYPE_DUP_DISCARD;
           if (!ghciInsertSymbolTable(oc->fileName, symhash, sname,
-                                     addr, false, type, oc)) {
+                                     addr, false, type, 0, oc)) {
              releaseOcInfo (oc);
              stgFree (oc->image);
              oc->image = NULL;
@@ -1895,7 +1923,7 @@ ocGetNames_PEi386 ( ObjectCode* oc )
           stgFree(tmp);
           sname = strdup (sname);
           if (!ghciInsertSymbolTable(oc->fileName, symhash, sname,
-                                     addr, false, type, oc))
+                                     addr, false, type, 0, oc))
                return false;
 
           break;
@@ -1905,6 +1933,7 @@ ocGetNames_PEi386 ( ObjectCode* oc )
       }
 
       if ((addr != NULL || isWeak)
+         && !common_already_defined
          && (!section || (section && section->kind != SECTIONKIND_IMPORT))) {
          /* debugBelch("addSymbol %p `%s' Weak:%lld \n", addr, sname, isWeak); */
          sname = strdup (sname);
@@ -1918,7 +1947,7 @@ ocGetNames_PEi386 ( ObjectCode* oc )
          }
 
          if (! ghciInsertSymbolTable(oc->fileName, symhash, sname, addr,
-                                     isWeak, type, oc))
+                                     isWeak, type, symSize, oc))
              return false;
       } else {
           /* We're skipping the symbol, but if we ever load this
