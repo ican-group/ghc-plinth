@@ -87,7 +87,7 @@ initializePlugins hsc_env
 
     -- dynamic plugins
   | loaded_plugins <- loadedPlugins (hsc_plugins hsc_env)
-  , map lpModuleName loaded_plugins == reverse (pluginModNames dflags)
+  , map lpModuleName loaded_plugins == dynPluginModNamesToLoad hsc_env
   , all same_args loaded_plugins
 
     -- external plugins
@@ -136,7 +136,7 @@ loadPlugins hsc_env
        }
   where
     dflags  = hsc_dflags hsc_env
-    to_load = reverse $ pluginModNames dflags
+    to_load = dynPluginModNamesToLoad hsc_env
 
     attachOptions mod_nm (plug, mod) =
         LoadedPlugin (PluginWithArgs plug (reverse options)) mod
@@ -144,6 +144,31 @@ loadPlugins hsc_env
         options = [ option | (opt_mod_nm, option) <- pluginModNameOpts dflags
                             , opt_mod_nm == mod_nm ]
     loadPlugin = loadPlugin' (mkVarOccFS (fsLit "plugin")) pluginTyConName hsc_env
+
+-- Note [Static plugins shadow -fplugin]
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- A host program (e.g. uplc-ghc / Plinth) can compile a plugin into the
+-- GHC executable itself by registering it as a 'StaticPlugin'. Source
+-- modules that request the plugin with -fplugin=M should then NOT
+-- trigger a dynamic load of module M -- the static plugin already
+-- provides it. Worse, with GHC's external interpreter enabled, any
+-- non-empty dynamic plugin list aborts with "Plugins require
+-- -fno-external-interpreter" (#14335), which breaks perfectly valid
+-- user code targeting the statically linked plugin.
+--
+-- 'dynPluginModNamesToLoad' filters out any name already claimed by a
+-- 'StaticPlugin' (matched via its 'spModuleName'). The remaining
+-- modules are the ones that must actually be loaded from disk.
+--
+-- 'pluginModNameOpts' is left untouched so -fplugin-opt arguments for
+-- the shadowed module still reach the static plugin via the
+-- constructor arguments set at registration time.
+dynPluginModNamesToLoad :: HscEnv -> [ModuleName]
+dynPluginModNamesToLoad hsc_env =
+    filter (not . claimedByStatic) (reverse (pluginModNames (hsc_dflags hsc_env)))
+  where
+    static_names = mapMaybe spModuleName (staticPlugins (hsc_plugins hsc_env))
+    claimedByStatic nm = nm `elem` static_names
 
 
 loadFrontendPlugin :: HscEnv -> ModuleName -> IO (FrontendPlugin, [Linkable], PkgsLoaded)

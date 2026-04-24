@@ -277,7 +277,9 @@ main' postLoadMode units dflags0 args flagWarnings = do
                            , mod_name == plinth_plugin_mod_name
                            ]
       plinth_static_plugin =
-        StaticPlugin (PluginWithArgs PlutusTx.Plugin.plugin plinth_plugin_args)
+        StaticPlugin
+          (PluginWithArgs PlutusTx.Plugin.plugin plinth_plugin_args)
+          (Just plinth_plugin_mod_name)
       static_plugins = [plinth_static_plugin]
 
   modifySession $ \hsc_env ->
