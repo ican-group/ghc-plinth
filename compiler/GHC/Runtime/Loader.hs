@@ -85,8 +85,11 @@ initializePlugins :: HscEnv -> IO HscEnv
 initializePlugins hsc_env
     -- check that plugin specifications didn't change
 
+    -- static plugins: see Note [Per-module options for static plugins]
+  | all static_args_unchanged (staticPlugins (hsc_plugins hsc_env))
+
     -- dynamic plugins
-  | loaded_plugins <- loadedPlugins (hsc_plugins hsc_env)
+  , loaded_plugins <- loadedPlugins (hsc_plugins hsc_env)
   , map lpModuleName loaded_plugins == dynPluginModNamesToLoad hsc_env
   , all same_args loaded_plugins
 
@@ -94,14 +97,12 @@ initializePlugins hsc_env
   , external_plugins <- externalPlugins (hsc_plugins hsc_env)
   , check_external_plugins external_plugins (externalPluginSpecs dflags)
 
-    -- FIXME: we should check static plugins too
-
   = return hsc_env -- no change, no need to reload plugins
 
   | otherwise
   = do (loaded_plugins, links, pkgs) <- loadPlugins hsc_env
        external_plugins <- loadExternalPlugins (externalPluginSpecs dflags)
-       let plugins' = (hsc_plugins hsc_env) { staticPlugins    = staticPlugins (hsc_plugins hsc_env)
+       let plugins' = (hsc_plugins hsc_env) { staticPlugins    = map refreshStaticArgs (staticPlugins (hsc_plugins hsc_env))
                                             , externalPlugins  = external_plugins
                                             , loadedPlugins    = loaded_plugins
                                             , loadedPluginDeps = (links, pkgs)
@@ -112,8 +113,15 @@ initializePlugins hsc_env
     dflags = hsc_dflags hsc_env
     -- dynamic plugins
     plugin_args = pluginModNameOpts dflags
-    same_args p = paArguments (lpPlugin p) == argumentsForPlugin p plugin_args
-    argumentsForPlugin p = map snd . filter ((== lpModuleName p) . fst)
+    same_args p = paArguments (lpPlugin p) == argumentsForPlugin (lpModuleName p) plugin_args
+    argumentsForPlugin mn = map snd . filter ((== mn) . fst)
+    -- static plugins: see Note [Per-module options for static plugins]
+    refreshStaticArgs sp = case spModuleName sp of
+      Nothing -> sp
+      Just mn -> sp { spPlugin = (spPlugin sp) { paArguments = argumentsForPlugin mn plugin_args } }
+    static_args_unchanged sp = case spModuleName sp of
+      Nothing -> True
+      Just mn -> paArguments (spPlugin sp) == argumentsForPlugin mn plugin_args
     -- external plugins
     check_external_plugin p spec = and
       [ epUnit                p  == esp_unit_id spec
@@ -160,9 +168,33 @@ loadPlugins hsc_env
 -- 'StaticPlugin' (matched via its 'spModuleName'). The remaining
 -- modules are the ones that must actually be loaded from disk.
 --
--- 'pluginModNameOpts' is left untouched so -fplugin-opt arguments for
--- the shadowed module still reach the static plugin via the
--- constructor arguments set at registration time.
+-- 'pluginModNameOpts' is left untouched: -fplugin-opt arguments for
+-- the shadowed module reach the static plugin via the per-module
+-- args refresh in 'initializePlugins'. See Note [Per-module options
+-- for static plugins].
+
+-- Note [Per-module options for static plugins]
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- A 'StaticPlugin' is registered once (e.g. in the host program's
+-- main, before compilation begins) with a fixed set of
+-- 'paArguments'. That registration only sees the global session
+-- DynFlags, so per-module pragmas like
+--    {-# OPTIONS_GHC -fplugin-opt M:k=v #-}
+-- which only land in the per-module DynFlags' 'pluginModNameOpts',
+-- would be silently ignored without a refresh.
+--
+-- 'initializePlugins' runs at the start of every per-module
+-- compilation (see callers in GHC.Driver.Pipeline). On each call we
+-- recompute each static plugin's args from the current
+-- 'pluginModNameOpts', filtered by the plugin's 'spModuleName'. If
+-- the args differ from what the static plugin currently holds, we
+-- treat the change like any other plugin reconfiguration and take
+-- the rebuild branch so 'driverPlugin' gets a chance to react.
+--
+-- Static plugins registered without an 'spModuleName' (e.g. haddock)
+-- have no module name to filter by, so their args are not rewritten:
+-- they keep whatever the registrar set, matching pre-existing
+-- behaviour.
 dynPluginModNamesToLoad :: HscEnv -> [ModuleName]
 dynPluginModNamesToLoad hsc_env =
     filter (not . claimedByStatic) (reverse (pluginModNames (hsc_dflags hsc_env)))
