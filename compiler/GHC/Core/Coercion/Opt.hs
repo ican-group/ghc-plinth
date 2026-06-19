@@ -416,13 +416,21 @@ opt_co4 env sym rep r (LRCo lr co)
 -- See Note [Optimising InstCo]
 opt_co4 env sym rep r (InstCo co1 arg)
     -- forall over type...
+    -- Backport of the InstCo fix from GHC #25387 (the #15725 "extra Sym" fix
+    -- was not quite right): do *not* push Sym into the argument. Optimise it
+    -- with sym=False and use its right-hand kind for the coherence. Using
+    -- 'sym_arg' (which may carry an extra Sym in front) makes the lifting
+    -- substitution's in-scope set bogus, tripping checkValidSubst.
   | Just (tv, kind_co, co_body) <- splitForAllCo_ty_maybe co1
-  = opt_co4_wrap (extendLiftingContext env tv
-                    (mkCoherenceRightCo Nominal t2 (mkSymCo kind_co) sym_arg))
-                   -- mkSymCo kind_co :: k1 ~ k2
-                   -- sym_arg :: (t1 :: k1) ~ (t2 :: k2)
-                   -- tv |-> (t1 :: k1) ~ (((t2 :: k2) |> (sym kind_co)) :: k1)
-                 sym rep r co_body
+  = let arg_noSym  = opt_co4_wrap env False False Nominal arg
+        kind_co'   = opt_co4_wrap env False False Nominal kind_co
+        s2         = coercionRKind arg_noSym
+    in opt_co4_wrap (extendLiftingContext env tv
+                       (mkCoherenceRightCo Nominal s2 (mkSymCo kind_co') arg_noSym))
+                    -- mkSymCo kind_co' :: k2 ~ k1
+                    -- arg_noSym :: (t1 :: k1) ~ (s2 :: k2)
+                    -- tv |-> (t1 :: k1) ~ (((s2 :: k2) |> (sym kind_co')) :: k1)
+                    sym rep r co_body
 
     -- forall over coercion...
   | Just (cv, kind_co, co_body) <- splitForAllCo_co_maybe co1
