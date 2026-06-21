@@ -100,7 +100,7 @@ import GHC.Data.Graph.Directed
 import qualified Data.List.NonEmpty as NE
 
 #if defined(PLINTH)
-import qualified PlutusTx.Plugin
+import qualified Plinth.Plugin
 import GHC.Driver.Monad (modifySession)
 #endif
 
@@ -271,14 +271,14 @@ main' postLoadMode units dflags0 args flagWarnings = do
   liftIO $ initUniqSupply (initialUnique dflags6) (uniqueIncrement dflags6)
 
 #if defined(PLINTH)
-  let plinth_plugin_mod_name = mkModuleName "PlutusTx.Plugin"
+  let plinth_plugin_mod_name = mkModuleName "Plinth.Plugin"
       plinth_plugin_args = [ opt
                            | (mod_name, opt) <- pluginModNameOpts dflags6
                            , mod_name == plinth_plugin_mod_name
                            ]
       plinth_static_plugin =
         StaticPlugin
-          (PluginWithArgs PlutusTx.Plugin.plugin plinth_plugin_args)
+          (PluginWithArgs Plinth.Plugin.plugin plinth_plugin_args)
           (Just plinth_plugin_mod_name)
       static_plugins = [plinth_static_plugin]
 
