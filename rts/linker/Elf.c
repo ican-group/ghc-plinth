@@ -1009,14 +1009,18 @@ ocGetNames_ELF ( ObjectCode* oc )
                   address.  Otherwise leave ad == NULL. */
 
                bool common_already_defined = false;
+               bool isCommon = (shndx == SHN_COMMON);
                if (shndx == SHN_COMMON) {
                    isLocal = false;
                    RtsSymbolInfo *existing = lookupStrHashTable(symhash, nm);
                    if (existing != NULL) {
-                       /* COMMON symbol already allocated by a previously-loaded
-                        * object; reuse that address so relocations resolve to
-                        * the same storage. */
-                       if(symbol->elf_sym->st_size > existing->size) {
+                       /* The name already has storage; reuse it. A strong
+                        * (non-COMMON) definition subsumes this COMMON
+                        * declaration regardless of size. Two COMMON
+                        * declarations with incompatible sizes are still an
+                        * error: the runtime linker cannot grow an allocation
+                        * after relocations have resolved against it. */
+                       if(existing->isCommon && symbol->elf_sym->st_size > existing->size) {
                            barf("linker: trying to link COMMON symbols %s with incompatible sizes: previous size %llu, new size %llu\n",
                                    nm,
                                    (long long unsigned int) existing->size,
@@ -1103,7 +1107,7 @@ ocGetNames_ELF ( ObjectCode* oc )
                            setWeakSymbol(oc, nm);
                        }
                        if (!ghciInsertSymbolTable(oc->fileName, symhash,
-                                                  nm, symbol->addr, isWeak, sym_type, symbol->elf_sym->st_size, oc)
+                                                  nm, symbol->addr, isWeak, sym_type, symbol->elf_sym->st_size, isCommon, oc)
                            ) {
                            goto fail;
                        }

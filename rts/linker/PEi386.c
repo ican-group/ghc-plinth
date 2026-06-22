@@ -438,7 +438,7 @@ void initLinker_PEi386(void)
     if (!ghciInsertSymbolTable(WSTR("(GHCi/Ld special symbols)"),
                                symhash, "__image_base__",
                                GetModuleHandleW (NULL), HS_BOOL_TRUE,
-                               SYM_TYPE_CODE, 0, NULL)) {
+                               SYM_TYPE_CODE, 0, false, NULL)) {
         barf("ghciInsertSymbolTable failed");
     }
 
@@ -1712,6 +1712,7 @@ ocGetNames_PEi386 ( ObjectCode* oc )
       SymbolAddr *addr = NULL;
       bool isWeak = false;
       bool common_already_defined = false;
+      bool isCommon = false;
       unsigned long symSize = 0;
       SymbolName *sname = get_sym_name (getSymShortName (info, sym), oc);
 
@@ -1796,10 +1797,13 @@ ocGetNames_PEi386 ( ObjectCode* oc )
             previously-loaded object already allocated storage for it. */
           RtsSymbolInfo *existing = lookupStrHashTable(symhash, sname);
           if (existing != NULL) {
-              /* COMMON symbol already allocated by a previously-loaded
-               * object; reuse that address so relocations resolve to
-               * the same storage. */
-              if (symValue > existing->size) {
+              /* The name already has storage; reuse it. If the existing entry
+               * is a strong (non-COMMON) definition it subsumes this COMMON
+               * declaration regardless of size. Two COMMON declarations with
+               * incompatible sizes are still an error: the runtime linker
+               * loads objects one at a time and cannot grow an allocation
+               * after relocations have resolved against it. */
+              if (existing->isCommon && symValue > existing->size) {
                   barf("linker: trying to link COMMON symbols %s with"
                        " incompatible sizes: previous size %llu,"
                        " new size %u\n",
@@ -1815,6 +1819,7 @@ ocGetNames_PEi386 ( ObjectCode* oc )
               addr = bss;
               bss = (SymbolAddr*)((StgWord)bss + (StgWord)symValue);
               symSize = (unsigned long)symValue;
+              isCommon = true;
               IF_DEBUG(linker_verbose, debugBelch("bss symbol @ %p %u\n", addr, symValue));
           }
       }
@@ -1844,7 +1849,7 @@ ocGetNames_PEi386 ( ObjectCode* oc )
           type = has_code_section ? SYM_TYPE_CODE : SYM_TYPE_DATA;
           type |= SYM_TYPE_DUP_DISCARD;
           if (!ghciInsertSymbolTable(oc->fileName, symhash, sname,
-                                     addr, false, type, 0, oc)) {
+                                     addr, false, type, 0, false, oc)) {
              releaseOcInfo (oc);
              stgFree (oc->image);
              oc->image = NULL;
@@ -1923,7 +1928,7 @@ ocGetNames_PEi386 ( ObjectCode* oc )
           stgFree(tmp);
           sname = strdup (sname);
           if (!ghciInsertSymbolTable(oc->fileName, symhash, sname,
-                                     addr, false, type, 0, oc))
+                                     addr, false, type, 0, false, oc))
                return false;
 
           break;
@@ -1947,7 +1952,7 @@ ocGetNames_PEi386 ( ObjectCode* oc )
          }
 
          if (! ghciInsertSymbolTable(oc->fileName, symhash, sname, addr,
-                                     isWeak, type, symSize, oc))
+                                     isWeak, type, symSize, isCommon, oc))
              return false;
       } else {
           /* We're skipping the symbol, but if we ever load this

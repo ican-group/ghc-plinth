@@ -1404,6 +1404,7 @@ ocGetNames_MachO(ObjectCode* oc)
                                                  , HS_BOOL_FALSE
                                                  , sym_type
                                                  , 0
+                                                 , false
                                                  , oc);
 
                             oc->symbols[curSymbol].name = nm;
@@ -1443,10 +1444,13 @@ ocGetNames_MachO(ObjectCode* oc)
 
                 RtsSymbolInfo *existing = lookupStrHashTable(symhash, nm);
                 if (existing != NULL) {
-                    /* COMMON symbol already allocated by a previously-loaded
-                     * object; reuse that address so relocations resolve to
-                     * the same storage. */
-                    if (sz > existing->size) {
+                    /* The name already has storage; reuse it. A strong
+                     * (non-COMMON) definition subsumes this COMMON declaration
+                     * regardless of size. Two COMMON declarations with
+                     * incompatible sizes are still an error: the runtime linker
+                     * cannot grow an allocation after relocations have resolved
+                     * against it. */
+                    if (existing->isCommon && sz > existing->size) {
                         barf("linker: trying to link COMMON symbols %s with"
                              " incompatible sizes: previous size %llu,"
                              " new size %lu\n",
@@ -1471,7 +1475,7 @@ ocGetNames_MachO(ObjectCode* oc)
                     ghciInsertSymbolTable(oc->fileName, symhash, nm,
                                          (void*)commonCounter, HS_BOOL_FALSE,
                                          sym_type,
-                                         sz, oc);
+                                         sz, true, oc);
                     oc->symbols[curSymbol].name = nm;
                     oc->symbols[curSymbol].addr = oc->info->macho_symbols[i].addr;
                     oc->symbols[curSymbol].type = sym_type;
