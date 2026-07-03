@@ -114,7 +114,15 @@ initializePlugins hsc_env
     -- dynamic plugins
     plugin_args = pluginModNameOpts dflags
     same_args p = paArguments (lpPlugin p) == argumentsForPlugin (lpModuleName p) plugin_args
-    argumentsForPlugin mn = map snd . filter ((== mn) . fst)
+    -- 'pluginModNameOpts' lists options in reverse source order (each
+    -- -fplugin-opt is prepended as it is parsed), so we 'reverse' to recover
+    -- source order. This must match how 'attachOptions' (in 'loadPlugins')
+    -- builds the args for dynamically loaded plugins, otherwise a static
+    -- plugin would receive its -fplugin-opt arguments in the opposite order
+    -- from a -fplugin-loaded one. That matters for order-sensitive options
+    -- (e.g. a later option overriding an earlier one, or an implication),
+    -- and would make 'same_args' below never hold for multi-option plugins.
+    argumentsForPlugin mn = reverse . map snd . filter ((== mn) . fst)
     -- static plugins: see Note [Per-module options for static plugins]
     refreshStaticArgs sp = case spModuleName sp of
       Nothing -> sp
