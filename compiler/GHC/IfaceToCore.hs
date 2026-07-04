@@ -101,6 +101,7 @@ import GHC.Types.SourceText
 import GHC.Types.Basic hiding ( SuccessFlag(..) )
 import GHC.Types.CompleteMatch
 import GHC.Types.SrcLoc
+import qualified GHC.Data.Strict as Strict
 import GHC.Types.TypeEnv
 import GHC.Types.Unique.FM
 import GHC.Types.Unique.DSet ( mkUniqDSet )
@@ -700,8 +701,22 @@ tc_iface_decl _ ignore_prags (IfaceId {ifName = name, ifType = iface_type,
                                        ifIdDetails = details, ifIdInfo = info})
   = do  { ty <- tcIfaceType iface_type
         ; details <- tcIdDetails ty details
-        ; info <- tcIdInfo ignore_prags TopLevel name ty info
-        ; return (AnId (mkGlobalId details name ty info)) }
+          -- Restore the binder's definition SrcSpan onto its Name, if the
+          -- interface recorded one. Only for home-unit modules: this mirrors
+          -- stock GHC, where home-package binders carry their def SrcSpan (from
+          -- the in-session name cache / HPT) but binders imported from prebuilt
+          -- external packages have noSrcSpan. See Note [Preserving binder
+          -- SrcSpans in interfaces] in GHC.Iface.Syntax.
+        ; hsc_env <- getTopEnv
+        ; let is_home = case nameModule_maybe name of
+                Just m  -> moduleUnitId m `elem` hsc_all_home_unit_ids hsc_env
+                Nothing -> False
+              name' | is_home
+                    , (sp : _) <- [ s | HsSrcSpan s <- info ]
+                    = setNameLoc name (RealSrcSpan sp Strict.Nothing)
+                    | otherwise = name
+        ; info' <- tcIdInfo ignore_prags TopLevel name' ty info
+        ; return (AnId (mkGlobalId details name' ty info')) }
 
 tc_iface_decl _ _ (IfaceData {ifName = tc_name,
                           ifCType = cType,
@@ -1742,6 +1757,10 @@ tcIdInfo ignore_prags toplvl name ty info = do
 
     tcPrag info (HsTagSig sig) = do
       return (info `setTagSig` sig)
+
+    -- Consumed in 'tc_iface_decl' to restore the binder's Name SrcSpan; carries
+    -- no IdInfo. See Note [Preserving binder SrcSpans in interfaces] in GHC.Iface.Syntax.
+    tcPrag info (HsSrcSpan _) = return info
 
         -- The next two are lazy, so they don't transitively suck stuff in
     tcPrag info (HsUnfold lb if_unf)

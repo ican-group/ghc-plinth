@@ -360,6 +360,24 @@ data IfaceInfoItem
   | HsNoCafRefs
   | HsLFInfo        IfaceLFInfo
   | HsTagSig        TagSig
+  | HsSrcSpan       RealSrcSpan
+                    -- ^ Definition span of the binder.
+                    -- See Note [Preserving binder SrcSpans in interfaces]
+
+-- Note [Preserving binder SrcSpans in interfaces]
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- A top-level binder's definition 'SrcSpan' normally lives only on the
+-- in-session 'Name' that 'GHC.Iface.Env.newGlobalBinder' allocates at the
+-- binding site. A binder reconstructed from an interface (i.e. not typechecked
+-- in this session) has 'noSrcSpan' instead (see
+-- 'GHC.Iface.Env.lookupNameCache'). That loses the definition location for
+-- imported functions, which tools that report source locations (e.g. Plinth's
+-- call-trace) rely on.
+--
+-- To keep it, we serialise the binder's 'RealSrcSpan' as an 'HsSrcSpan' info
+-- item ('idToIfaceDecl') and, on load, put it back on the binder's 'Name' with
+-- 'setNameLoc' ('tc_iface_decl'). This is the definition span of the *binder*
+-- specifically (unlike the whole-RHS span carried by unfolding 'SourceNote's).
 
 -- NB: Specialisations and rules come in separately and are
 -- only later attached to the Id.  Partial reason: some are orphans.
@@ -1520,6 +1538,7 @@ instance Outputable IfaceInfoItem where
   ppr (HsCprSig cpr)        = text "CPR:" <+> ppr cpr
   ppr HsNoCafRefs           = text "HasNoCafRefs"
   ppr (HsLFInfo lf_info)    = text "LambdaFormInfo:" <+> ppr lf_info
+  ppr (HsSrcSpan sp)        = text "DefSpan:" <+> ppr sp
   ppr (HsTagSig tag_sig)    = text "TagSig:" <+> ppr tag_sig
 
 instance Outputable IfaceJoinInfo where
@@ -2285,6 +2304,13 @@ instance Binary IfaceInfoItem where
     put_ bh (HsCprSig cpr)        = putByte bh 6 >> put_ bh cpr
     put_ bh (HsLFInfo lf_info)    = putByte bh 7 >> put_ bh lf_info
     put_ bh (HsTagSig sig)        = putByte bh 8 >> put_ bh sig
+    put_ bh (HsSrcSpan src)       = do
+        putByte bh 5
+        put_ bh (srcSpanFile src)
+        put_ bh (srcSpanStartLine src)
+        put_ bh (srcSpanStartCol src)
+        put_ bh (srcSpanEndLine src)
+        put_ bh (srcSpanEndCol src)
 
     get bh = do
         h <- getByte bh
@@ -2296,6 +2322,13 @@ instance Binary IfaceInfoItem where
                     return (HsUnfold lb ad)
             3 -> liftM HsInline $ get bh
             4 -> return HsNoCafRefs
+            5 -> do file <- get bh
+                    sl <- get bh
+                    sc <- get bh
+                    el <- get bh
+                    ec <- get bh
+                    return (HsSrcSpan (mkRealSrcSpan (mkRealSrcLoc file sl sc)
+                                                     (mkRealSrcLoc file el ec)))
             6 -> HsCprSig <$> get bh
             7 -> HsLFInfo <$> get bh
             _ -> HsTagSig <$> get bh
@@ -2707,6 +2740,7 @@ instance NFData IfaceInfoItem where
     HsCprSig cpr -> cpr `seq` ()
     HsLFInfo lf_info -> lf_info `seq` () -- TODO: seq further?
     HsTagSig sig -> sig `seq` ()
+    HsSrcSpan sp -> sp `seq` ()
 
 instance NFData IfGuidance where
   rnf = \case

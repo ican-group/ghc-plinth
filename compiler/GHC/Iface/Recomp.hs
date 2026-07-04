@@ -1062,7 +1062,7 @@ addFingerprints hsc_env iface0
           = do let hash_fn = mk_put_name local_env
                    decl = abiDecl abi
                --pprTrace "fingerprinting" (ppr (ifName decl) ) $ do
-               hash <- computeFingerprint hash_fn abi
+               hash <- computeFingerprint hash_fn (abiForHash abi)
                env' <- extend_hash_env local_env (hash,decl)
                return (env', (hash,decl) : decls_w_hashes)
 
@@ -1075,7 +1075,7 @@ addFingerprints hsc_env iface0
                let hash_fn = mk_put_name local_env1
                -- pprTrace "fingerprinting" (ppr (map ifName decls) ) $ do
                 -- put the cycle in a canonical order
-               hash <- computeFingerprint hash_fn stable_abis
+               hash <- computeFingerprint hash_fn (map abiForHash stable_abis)
                let pairs = zip (map (bumpFingerprint hash) [0..]) stable_decls
                 -- See Note [Fingerprinting recursive groups]
                local_env2 <- foldM extend_hash_env local_env pairs
@@ -1402,6 +1402,21 @@ type IfaceInstABI = IfExtName   -- Name of DFunId or CoAxiom that is evidence fo
 
 abiDecl :: IfaceDeclABI -> IfaceDecl
 abiDecl (_, decl, _) = decl
+
+-- | Drop the 'HsSrcSpan' info item before an ABI is fingerprinted. The binder's
+-- definition span is written to the interface (see Note [Preserving binder
+-- SrcSpans in interfaces] in GHC.Iface.Syntax) but must not contribute to the
+-- ABI hash: it is not semantically relevant, and hashing it would make a mere
+-- line-number change (e.g. adding a comment above a binding) trigger spurious
+-- recompilation of dependents. Only the ABI used for hashing is stripped; the
+-- decl written to disk keeps the span.
+abiForHash :: IfaceDeclABI -> IfaceDeclABI
+abiForHash (m, decl, extras) = (m, strip decl, extras)
+  where
+    strip d@IfaceId{ifIdInfo = info} = d { ifIdInfo = filter (not . isSrcSpanItem) info }
+    strip d = d
+    isSrcSpanItem (HsSrcSpan _) = True
+    isSrcSpanItem _             = False
 
 cmp_abiNames :: IfaceDeclABI -> IfaceDeclABI -> Ordering
 cmp_abiNames abi1 abi2 = getOccName (abiDecl abi1) `compare`
