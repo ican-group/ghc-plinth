@@ -76,7 +76,15 @@ idToIfaceDecl id
   = IfaceId { ifName      = getName id,
               ifType      = toIfaceType (idType id),
               ifIdDetails = toIfaceIdDetails (idDetails id),
-              ifIdInfo    = toIfaceIdInfo (idInfo id) }
+              -- See Note [Preserving binder SrcSpans in interfaces] in GHC.Iface.Syntax
+              ifIdInfo    = toIfaceIdInfo (idInfo id) ++ binderSrcSpanItem (getName id) }
+
+-- | Preserve a binder's definition 'SrcSpan' across interfaces.
+-- See Note [Preserving binder SrcSpans in interfaces] in GHC.Iface.Syntax.
+binderSrcSpanItem :: Name -> [IfaceInfoItem]
+binderSrcSpanItem nm = case srcSpanToRealSrcSpan (nameSrcSpan nm) of
+  Just sp -> [HsSrcSpan sp]
+  Nothing -> []
 
 --------------------------
 dataConToIfaceDecl :: Bool -> DataCon -> IfaceDecl
