@@ -13,16 +13,33 @@ dnl
 # see what flags are available. (Better yet, read the documentation!)
 #
 
-AC_INIT([The Glorious Glasgow Haskell Compilation System], [9.6.1501], [glasgow-haskell-bugs@haskell.org], [ghc-AC_PACKAGE_VERSION])
+AC_INIT([The Glorious Glasgow Haskell Compilation System], [9.6.166], [glasgow-haskell-bugs@haskell.org], [ghc-AC_PACKAGE_VERSION])
     # Version on master must be X.Y (not X.Y.Z) for ProjectVersionMunged variable
     # to be useful (cf #19058). However, the version must have three components
     # (X.Y.Z) on stable branches (e.g. ghc-9.2) to ensure that pre-releases are
     # versioned correctly.
 
-    # Note for Plinth release: Up to four version components are supported and,
-    # we want a distinct version from upstream GHC. Therefore we use:
-    #  - 9.6.1501.DATE for RELEASE=NO (version in this file is [9.6.1501])
-    #  - 9.6.1501.X for RELEASE=YES (add X to version: [9.6.1501.X])
+    # Note for Plinth release: up to four version components are supported (the
+    # maximum tools accept) and we want a version distinct from upstream GHC's.
+    #
+    # The third component encodes the Plinth version this compiler targets, using
+    # a two-digit minor: Plinth 1.66 -> 166 (a future 1.7 is 170, not 17). Bump it
+    # whenever the plutus submodule is updated, and keep the plutus-tx bound in
+    # plinth/test/plinth-test.cabal in step: uplc-ghc only compiles Plinth code
+    # against the plutus-tx it was built with, and nothing else in the version
+    # would tell a user which one that is.
+    #
+    # The fourth component distinguishes builds of the same Plinth version:
+    #  - 9.6.166.DATE for RELEASE=NO (version in this file is [9.6.166])
+    #  - 9.6.166.X for RELEASE=YES, X counting re-releases from 1
+    #
+    # 166 is numerically below the previous 1501, which encoded a release counter
+    # in this component; nothing was ever published as 1501, so no public version
+    # went backwards.
+    #
+    # Note that this version also keys cabal's store directory
+    # (~/.cabal/store/ghc-9.6.166-plinth), so each Plinth version gets its own
+    # store and cannot reuse ABI-incompatible artifacts built by another.
     #
     # In GHC 9.8+ we don't need to modify the version anymore, just the
     # "Project Unit Id" from ghc --info
