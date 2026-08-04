@@ -30,8 +30,11 @@ AC_INIT([The Glorious Glasgow Haskell Compilation System], [9.6.166], [glasgow-h
     # would tell a user which one that is.
     #
     # The fourth component distinguishes builds of the same Plinth version:
-    #  - 9.6.166.DATE for RELEASE=NO (version in this file is [9.6.166])
-    #  - 9.6.166.X for RELEASE=YES, X counting re-releases from 1
+    #  - 9.6.166.DATE for a snapshot build (RELEASE=NO, the default)
+    #  - 9.6.166.X for a released build, X counting releases from 1
+    # Keep the version in this file at three components: plinth-build.sh rewrites
+    # it to the full four-component version and passes RELEASE=YES when building a
+    # release. See Note [Release versioning] there.
     #
     # 166 is numerically below the previous 1501, which encoded a release counter
     # in this component; nothing was ever published as 1501, so no public version
