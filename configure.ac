@@ -13,7 +13,7 @@ dnl
 # see what flags are available. (Better yet, read the documentation!)
 #
 
-AC_INIT([The Glorious Glasgow Haskell Compilation System], [9.6.166], [glasgow-haskell-bugs@haskell.org], [ghc-AC_PACKAGE_VERSION])
+AC_INIT([The Glorious Glasgow Haskell Compilation System], [9.6.169], [glasgow-haskell-bugs@haskell.org], [ghc-AC_PACKAGE_VERSION])
     # Version on master must be X.Y (not X.Y.Z) for ProjectVersionMunged variable
     # to be useful (cf #19058). However, the version must have three components
     # (X.Y.Z) on stable branches (e.g. ghc-9.2) to ensure that pre-releases are
@@ -23,15 +23,15 @@ AC_INIT([The Glorious Glasgow Haskell Compilation System], [9.6.166], [glasgow-h
     # maximum tools accept) and we want a version distinct from upstream GHC's.
     #
     # The third component encodes the Plinth version this compiler targets, using
-    # a two-digit minor: Plinth 1.66 -> 166 (a future 1.7 is 170, not 17). Bump it
+    # a two-digit minor: Plinth 1.69 -> 169 (a future 1.7 is 170, not 17). Bump it
     # whenever the plutus submodule is updated, and keep the plutus-tx bound in
     # plinth/test/plinth-test.cabal in step: uplc-ghc only compiles Plinth code
     # against the plutus-tx it was built with, and nothing else in the version
     # would tell a user which one that is.
     #
     # The fourth component distinguishes builds of the same Plinth version:
-    #  - 9.6.166.DATE for a snapshot build (RELEASE=NO, the default)
-    #  - 9.6.166.X for a released build, X counting releases from 1
+    #  - 9.6.169.DATE for a snapshot build (RELEASE=NO, the default)
+    #  - 9.6.169.X for a released build, X counting releases from 1
     # Keep the version in this file at three components: plinth-build.sh rewrites
     # it to the full four-component version and passes RELEASE=YES when building a
     # release. See Note [Release versioning] there.
@@ -41,7 +41,7 @@ AC_INIT([The Glorious Glasgow Haskell Compilation System], [9.6.166], [glasgow-h
     # went backwards.
     #
     # Note that this version also keys cabal's store directory
-    # (~/.cabal/store/ghc-9.6.166-plinth), so each Plinth version gets its own
+    # (~/.cabal/store/ghc-9.6.169-plinth), so each Plinth version gets its own
     # store and cannot reuse ABI-incompatible artifacts built by another.
     #
     # In GHC 9.8+ we don't need to modify the version anymore, just the
