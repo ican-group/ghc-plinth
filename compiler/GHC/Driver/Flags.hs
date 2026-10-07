@@ -680,6 +680,7 @@ data GeneralFlag
    -- Interface files
    | Opt_IgnoreInterfacePragmas
    | Opt_OmitInterfacePragmas
+   | Opt_KeepInterfacePragmas -- See Note [Keep interface pragmas] in GHC.Driver.Session
    | Opt_ExposeAllUnfoldings
    | Opt_ExposeOverloadedUnfoldings
    | Opt_KeepAutoRules -- ^Keep auto-generated rules even if they seem to have become useless
