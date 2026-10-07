@@ -1783,6 +1783,28 @@ setInteractivePrint f d = d { interactivePrint = Just f}
 -----------------------------------------------------------------------------
 -- Setting the optimisation level
 
+-- Note [Keep interface pragmas]
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- The Plinth compiler (uplc-ghc) does whole-program compilation: it
+-- translates the unfoldings of all the imported definitions that the
+-- compiled code uses. Thus it needs the unfoldings in the interface
+-- files. Two flags remove them:
+--   -fomit-interface-pragmas:   do not write IdInfo (unfoldings,
+--                               strictness, ...) to .hi files;
+--   -fignore-interface-pragmas: do not read IdInfo from .hi files.
+-- -O0 sets both flags, so a module compiled with -O0 (on the command
+-- line or in an OPTIONS_GHC pragma) breaks the Plinth code that uses it.
+--
+-- With Opt_KeepInterfacePragmas, an optimisation level does not set
+-- these two flags. The other flags of -O0 keep their effect. The flag has
+-- no command-line spelling: uplc-ghc sets it, and unsets the two flags,
+-- in its initial DynFlags.
+--
+-- An explicit -fomit-interface-pragmas still works. Plinth needs it to
+-- hide the IdInfo of some definitions: e.g. GHC must not know that the
+-- builtin PlutusTx.Builtins.Internal.error is bottom, otherwise it
+-- rewrites (error x) to (case error of {}).
+
 updOptLevelChanged :: Int -> DynFlags -> (DynFlags, Bool)
 -- ^ Sets the 'DynFlags' to be appropriate to the optimisation level and signals if any changes took place
 updOptLevelChanged n dfs
@@ -1793,7 +1815,11 @@ updOptLevelChanged n dfs
    (dfs2, changed2) = foldr set   (dfs1, False) extra_gopts
    (dfs3, changed3) = setLlvmOptLevel dfs2
 
-   extra_gopts  = [ f | (ns,f) <- optLevelFlags, final_n `elem` ns ]
+   -- See Note [Keep interface pragmas]
+   keep_prags   = gopt Opt_KeepInterfacePragmas dfs
+   extra_gopts  = [ f | (ns,f) <- optLevelFlags, final_n `elem` ns
+                      , not (keep_prags && f `elem` [ Opt_OmitInterfacePragmas
+                                                    , Opt_IgnoreInterfacePragmas ]) ]
    remove_gopts = [ f | (ns,f) <- optLevelFlags, final_n `notElem` ns ]
 
    set f (dfs, changed)

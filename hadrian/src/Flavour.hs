@@ -16,6 +16,7 @@ module Flavour
   , enableLinting
   , enableHaddock
   , enableHiCore
+  , exposeUnfoldings
   , useNativeBignum
   , omitPragmas
 
@@ -64,6 +65,7 @@ flavourTransformers = M.fromList
     , "lint"             =: enableLinting
     , "haddock"          =: enableHaddock
     , "hi_core"          =: enableHiCore
+    , "expose_unfoldings" =: exposeUnfoldings
     , "late_ccs"         =: enableLateCCS
     , "boot_nonmoving_gc" =: enableBootNonmovingGc
     ]
@@ -189,6 +191,16 @@ enableHiCore :: Flavour -> Flavour
 enableHiCore = addArgs
     $ notStage0 ? builder (Ghc CompileHs)
     ? pure ["-fwrite-if-simplified-core"]
+
+-- | Build base, ghc-prim and ghc-bignum with -fexpose-all-unfoldings, so
+-- that their interface files have the unfoldings of all their
+-- definitions. The Plinth compiler translates these unfoldings to Plutus
+-- Core. Plinth code cannot use the other libraries (e.g. containers,
+-- text), so they keep the smaller interface files.
+exposeUnfoldings :: Flavour -> Flavour
+exposeUnfoldings = addArgs
+    $ notStage0 ? packageOneOf [base, ghcPrim, ghcBignum] ? builder (Ghc CompileHs)
+    ? pure ["-fexpose-all-unfoldings"]
 
 -- | Transform the input 'Flavour' so as to build with
 --   @-split-sections@ whenever appropriate.

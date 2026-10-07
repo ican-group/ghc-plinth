@@ -202,6 +202,10 @@ main' postLoadMode units dflags0 args flagWarnings = do
                             `gopt_set` Opt_ExternalInterpreter
                             `gopt_set` Opt_WriteIfSimplifiedCore
                             `gopt_set` Opt_PluginTrustworthy
+                            -- See Note [Keep interface pragmas] in GHC.Driver.Session
+                            `gopt_set` Opt_KeepInterfacePragmas
+                            `gopt_unset` Opt_OmitInterfacePragmas
+                            `gopt_unset` Opt_IgnoreInterfacePragmas
 #endif
 
       -- turn on -fimplicit-import-qualified for GHCi now, so that it

@@ -312,6 +312,7 @@ data GeneralFlag
    -- Interface files
    | Opt_IgnoreInterfacePragmas
    | Opt_OmitInterfacePragmas
+   | Opt_KeepInterfacePragmas -- See Note [Keep interface pragmas] in GHC.Driver.Session
    | Opt_ExposeAllUnfoldings
    | Opt_WriteInterface -- forces .hi files to be written even with -fno-code
    | Opt_WriteHie -- generate .hie files

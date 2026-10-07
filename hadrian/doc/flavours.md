@@ -313,6 +313,10 @@ The supported transformers are listed below:
         <td>Emit whole Core bindings into the interface files via <code>-fwrite-if-simplified-core</code>.</td>
     </tr>
     <tr>
+        <td><code>expose_unfoldings</code></td>
+        <td>Build <code>base</code>, <code>ghc-prim</code> and <code>ghc-bignum</code> with <code>-fexpose-all-unfoldings</code>, so that their interface files have the unfoldings of all the definitions (for the Plinth compiler).</td>
+    </tr>
+    <tr>
         <td><code>late_ccs</code></td>
         <td>Enable <code>-fprof-late</code> in profiled libraries.</td>
     </tr>
