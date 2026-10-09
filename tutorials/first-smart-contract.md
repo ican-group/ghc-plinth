@@ -86,7 +86,7 @@ index-state:
 source-repository-package
   type: git
   location: https://github.com/input-output-hk/ghc-plinth-plutus
-  tag: adcc5b44cbc1092594fc82aecdf292258ef4c99a
+  tag: f89c66c51e7b382c6574fc7d7887de8ba8ced457
   subdir: plutus-tx
           plutus-core
 
@@ -129,7 +129,7 @@ package sodium-clib
 
 Use the `ghc-plinth-plutus` commit that matches your `uplc-ghc`: the compiler and
 these libraries are released together as a matched set, built from the same
-commit. The commit above matches release 9.6.169.1 (the current ghcup
+commit. The commit above matches release 9.6.169.2 (the current ghcup
 `latest`); for a different `uplc-ghc`, use the plutus commit it was built
 from.
 

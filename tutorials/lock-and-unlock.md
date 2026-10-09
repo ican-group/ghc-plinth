@@ -90,7 +90,7 @@ index-state:
 source-repository-package
   type: git
   location: https://github.com/input-output-hk/ghc-plinth-plutus
-  tag: adcc5b44cbc1092594fc82aecdf292258ef4c99a
+  tag: f89c66c51e7b382c6574fc7d7887de8ba8ced457
   subdir: plutus-tx
           plutus-core
           plutus-ledger-api
