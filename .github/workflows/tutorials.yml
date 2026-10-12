@@ -56,13 +56,7 @@ jobs:
     - name: Install the uplc-ghc release of the examples
       run: |
         set -eu
-        VERSION=$(sed -n 's/^with-compiler: *uplc-ghc-//p' examples/add/cabal.project)
-        for f in examples/add/cabal.project examples/lock/cabal.project; do
-          if ! grep -qx "with-compiler: uplc-ghc-$VERSION" "$f"; then
-            echo "error: $f does not use uplc-ghc-$VERSION"
-            exit 1
-          fi
-        done
+        VERSION=$(examples/test-tutorials.sh version)
         ghcup config add-release-channel https://raw.githubusercontent.com/input-output-hk/ghc-plinth/ghcup-channel/ghcup-plinth.yaml
         ghcup install plinth "$VERSION"
         ghcup set plinth "$VERSION"
@@ -87,6 +81,78 @@ jobs:
       with:
         name: lock-plutus
         path: examples/lock/lock.plutus
+
+  # The on-chain projects on Windows, as tutorials/first-smart-contract-windows
+  # sets them up: a stock ghcup and cabal, git with long paths, and the
+  # uplc-ghc release from the ghcup channel. It uses the MSYS2 shell of the
+  # plinth-test-windows job in ci.yml, which builds the same crypto clib
+  # packages, so test-tutorials.sh runs as on Linux.
+  tutorial-onchain-windows:
+    name: tutorials / on-chain (uplc-ghc, Windows)
+    runs-on: windows-latest
+    timeout-minutes: 180
+    defaults:
+      run:
+        shell: msys2 {0}
+    env:
+      # git config --global core.longpaths true, for every git that cabal runs
+      # (the MSYS2 shell has its own HOME, so --global would miss it).
+      GIT_CONFIG_COUNT: 1
+      GIT_CONFIG_KEY_0: core.longpaths
+      GIT_CONFIG_VALUE_0: 'true'
+    steps:
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: false
+
+    - name: Setup MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        path-type: inherit
+        update: false
+        install: >-
+          curl
+
+    # cabal (the GHC it also installs is not used).
+    - uses: haskell-actions/setup@v2
+      id: setup
+      name: Setup Haskell tools
+      with:
+        ghc-version: '9.6.7'
+        cabal-version: 'latest'
+
+    # The runner image's ghcup can be older than the 0.2.1.0 that the
+    # channel needs, so use the current release. Its bin directory gets the
+    # uplc-ghc links.
+    - name: Install the uplc-ghc release of the examples
+      run: |
+        set -eu
+        VERSION=$(examples/test-tutorials.sh version)
+        mkdir -p "$HOME/.local/bin"
+        GHCUP="$HOME/.local/bin/ghcup.exe"
+        curl -fsSL "https://downloads.haskell.org/~ghcup/x86_64-mingw64-ghcup.exe" -o "$GHCUP"
+        "$GHCUP" --version
+        "$GHCUP" config add-release-channel https://raw.githubusercontent.com/input-output-hk/ghc-plinth/ghcup-channel/ghcup-plinth.yaml
+        "$GHCUP" install plinth "$VERSION"
+        "$GHCUP" set plinth "$VERSION"
+        BINDIR=$("$GHCUP" whereis bindir)
+        echo "$BINDIR" >> "$GITHUB_PATH"
+        "$(cygpath -u "$BINDIR")/uplc-ghc-$VERSION" --version
+        "$(cygpath -u "$BINDIR")/uplc-ghc-pkg-$VERSION" --version
+
+    - name: Cache cabal store
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.setup.outputs.cabal-store }}
+        key: tutorials-onchain-${{ runner.os }}-${{ hashFiles('examples/add/cabal.project', 'examples/lock/cabal.project') }}
+        restore-keys: tutorials-onchain-${{ runner.os }}-
+
+    # JOBS=1: compiling with the Plinth plugin is memory-heavy (see the
+    # plinth-test-windows job in ci.yml).
+    - name: Build and run the on-chain projects
+      run: JOBS=1 examples/test-tutorials.sh onchain
 
   tutorial-offchain:
     name: tutorials / off-chain (cardano-api + devnet)
