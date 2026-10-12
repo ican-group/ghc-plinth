@@ -115,6 +115,63 @@ This is where Plinth comes in: it is the language you write these scripts in.
 Plinth code is compiled down to **Plutus Core**, the low-level language the
 Cardano ledger actually executes.
 
+## Example: state across transactions
+
+The auction of the previous section needs state: the highest bid so far. A
+transaction cannot change an output. It can only spend outputs and create new
+ones. So the contract keeps its state in the datum of one output at the script
+address. Each step spends that output and creates the next one, with the new
+state in its datum. This new output is the **continuing output**. The validator
+checks it: it must go back to the same script address, with the correct datum
+and value.
+
+An auction keeps its data in three places:
+
+- the **parameters** of the validator, which are compiled into the script: the
+  seller, the item, the minimum bid and the end time;
+- the **datum** of the auction output: the highest bid so far and the key of
+  the bidder (no bid at the start);
+- the **value** of the auction output: the item, and the ada of the highest
+  bid, which the contract holds until the end.
+
+![An auction as a chain of outputs at one script address: each bid transaction spends the current auction output, creates the next one with the new highest bid in its datum, and refunds the previous bidder.]({{ '/assets/images/auction-state.svg' | relative_url }})
+
+To bid, the bidder builds a transaction off-chain. The transaction:
+
+1. spends the current auction output, with a redeemer that gives the new bid;
+2. creates the continuing output, with the new bid and the bidder's key in its
+   datum, and the item and the new bid in its value;
+3. pays the previous bid back to the previous bidder;
+4. has a validity interval that ends before the end time.
+
+The validator accepts the transaction only if the new bid is higher than the
+previous one (or, for the first bid, at least the minimum bid), the continuing
+output is correct, and the previous bidder gets the refund. After the end time,
+a payout transaction spends the last auction output. It sends the item to the
+highest bidder and the ada to the seller.
+
+Some properties follow from this design:
+
+- **The address does not change.** A script address is the hash of the
+  validator script, which includes its parameters. The datum and the value are
+  not part of it. So all the states of one auction are at the same address. An
+  auction with different parameters has a different address.
+- **A refund needs no notification.** The refund is a usual output to the
+  address of the previous bidder. A wallet finds the outputs at its addresses
+  in the UTXO set, so the previous bidder's wallet shows the refund. Only the
+  key of that address can spend it.
+- **Only one bid per state.** All the bids spend the same output. If two
+  bidders build on the same state, only the first transaction in a block is
+  valid. The node rejects the second one because its input is already spent,
+  and the bidder pays no fee. The second bidder must build a new bid on the
+  new state.
+- **A token identifies the real auction.** Anyone can send an output with any
+  datum to the script address, for example with a false "highest bid". So a
+  real contract mints a unique token (an NFT, the *thread token*) into the
+  first auction output, and the validator requires the token in each
+  continuing output. Bidders use the output that holds the token, and ignore
+  the other outputs at the address.
+
 ## Further reading
 
 - [How smart contracts run: Plutus Core and the CEK machine]({% link explanation/plutus-core.md %})
