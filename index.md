@@ -58,13 +58,4 @@ which separates docs into four kinds by what you need from them:
 - **[Reference]({% link reference/index.md %})** &mdash; *information-oriented.*
   Dry facts to look up.
 
-## External documentation
-
-- [Plinth user guide][plinth]
-- [Plutus / Plinth GitHub repository][plutus-repo]
-- [Plinth project template][plinth-template]
-
-[plinth]: https://plutus.cardano.intersectmbo.org/docs/
 [cardano]: https://cardano.org/
-[plutus-repo]: https://github.com/IntersectMBO/plutus
-[plinth-template]: https://github.com/IntersectMBO/plinth-template
