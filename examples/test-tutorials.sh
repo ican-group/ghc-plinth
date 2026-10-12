@@ -10,9 +10,11 @@
 #
 # Usage: test-tutorials.sh [onchain|offchain-build|e2e]...
 # With no argument, run all stages.
+#        test-tutorials.sh version
+# Print the uplc-ghc release that add/ and lock/ name in with-compiler.
 #
-# onchain needs the uplc-ghc release named in examples/add/cabal.project
-# (ghcup install plinth <version>).
+# onchain needs that release (ghcup install plinth <version>). JOBS=n
+# limits cabal to n parallel package builds (default: one per CPU).
 # offchain-build needs the GHC named in examples/lock-ghci/cabal.project
 # and the system LMDB and liburing libraries (liblmdb-dev and
 # liburing-dev on Debian/Ubuntu).
@@ -25,6 +27,20 @@ DEVKIT_VERSION=0.12.0-beta5
 DEVKIT_DIR="$HOME/.yaci-devkit"
 
 log() { printf '\n=== %s\n' "$*"; }
+
+# The uplc-ghc release of add/ and lock/ (with-compiler: uplc-ghc-<version>).
+# Fail if they do not name the same one.
+plinth_version() {
+  local add lock
+  add=$(sed -n 's/^with-compiler: *uplc-ghc-//p' "$EXAMPLES_DIR/add/cabal.project")
+  lock=$(sed -n 's/^with-compiler: *uplc-ghc-//p' "$EXAMPLES_DIR/lock/cabal.project")
+  if [ -z "$add" ] || [ "$add" != "$lock" ]; then
+    echo "error: add/ and lock/ must name the same uplc-ghc release" \
+         "(add: '$add', lock: '$lock')" >&2
+    return 1
+  fi
+  echo "$add"
+}
 
 # Retry a command a few times, 30s apart. Use it for the network-facing
 # cabal update: hackage-security also queries hackage.haskell.org mirrors,
@@ -51,14 +67,14 @@ stage_onchain() {
   log "onchain: examples/add"
   ( cd "$EXAMPLES_DIR/add"
     retry 3 cabal update
-    cabal build
+    cabal build ${JOBS:+--jobs="$JOBS"}
     cabal run -v0 plinth-add
     grep -F 'addInteger' add.uplc
   )
 
   log "onchain: examples/lock"
   ( cd "$EXAMPLES_DIR/lock"
-    cabal build
+    cabal build ${JOBS:+--jobs="$JOBS"}
     cabal run -v0 plinth-lock
     grep -F '"type": "PlutusScriptV3"' lock.plutus
     grep -E '"cborHex": "[0-9a-f]+"' lock.plutus >/dev/null
@@ -214,6 +230,11 @@ stage_e2e() {
 }
 
 # ---------------------------------------------------------------------------
+
+if [ "${1:-}" = version ]; then
+  plinth_version
+  exit
+fi
 
 stages=("$@")
 [ ${#stages[@]} -eq 0 ] && stages=(onchain offchain-build e2e)
