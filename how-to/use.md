@@ -5,29 +5,26 @@ permalink: /how-to/use/
 
 The recommended way to use the Plinth standalone compiler is to set it once in
 `cabal.project`. If you [installed it via ghcup]({% link how-to/install.md %})
-(the recommended way), `uplc-ghc` is on `PATH` and its name alone is enough:
+(the recommended way), each installed release is on `PATH` as
+`uplc-ghc-<version>`. Name the release in `cabal.project`:
 
 ```haskell
-with-compiler: uplc-ghc
-with-hc-pkg:   uplc-ghc-pkg
+with-compiler: uplc-ghc-9.6.169.2
+with-hc-pkg:   uplc-ghc-pkg-9.6.169.2
 packages: .
 ```
 
+With the version in the name, the project keeps its compiler when you install
+or set a different release. The plain `uplc-ghc` is the release that you set
+with `ghcup set plinth`.
+
 The `with-hc-pkg` line points cabal at the `ghc-pkg` that belongs to
-`uplc-ghc`. ghcup installs it under the name `uplc-ghc-pkg`, so that it does
-not collide with your regular GHC. Without this line, cabal looks for a
+`uplc-ghc`. ghcup installs it under the name `uplc-ghc-pkg-<version>`, so that
+it does not collide with your regular GHC. Without this line, cabal looks for a
 `ghc-pkg` next to the compiler. On Linux and macOS this finds the correct one
 through the `uplc-ghc` symlink, but on Windows (where ghcup creates shims, not
 symlinks) cabal picks up the `ghc-pkg.exe` of your regular GHC and fails with a
 version mismatch.
-
-Releases from 9.6.166.2 install the `uplc-ghc-pkg` link. If the command is not
-found, update first:
-
-```console
-$ ghcup install plinth latest
-$ ghcup set plinth latest
-```
 
 For a compiler built from source, give the path to the binary instead. The
 matching `ghc-pkg` sits next to it, so `with-hc-pkg` is not needed:
@@ -75,9 +72,11 @@ source-repository-package
 
 Use the `ghc-plinth-plutus` commit that matches your `uplc-ghc`: the compiler
 and these libraries are released together as a matched set, built from the same
-commit. The commit above matches release 9.6.169.2 (the current ghcup
-`latest`); for a different `uplc-ghc`, use the plutus commit it was built
-from.
+commit. The commit above matches release 9.6.169.2, the release in
+`with-compiler`. To use a different release, change `with-compiler`,
+`with-hc-pkg` and this `tag` together. The commit of a release is the `plutus`
+submodule of its tag (`v<version>`) in
+[ghc-plinth](https://github.com/input-output-hk/ghc-plinth).
 
 In addition you may want to add the following `source-repository-package` blocks
 that build the C crypto libraries used by Cardano (`libsodium`, `secp256k1`,

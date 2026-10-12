@@ -66,8 +66,8 @@ details). Add the Plinth release channel, then install and activate the tool:
 
 ```console
 > ghcup config add-release-channel https://raw.githubusercontent.com/input-output-hk/ghc-plinth/ghcup-channel/ghcup-plinth.yaml
-> ghcup install plinth latest
-> ghcup set plinth latest
+> ghcup install plinth 9.6.169.2
+> ghcup set plinth 9.6.169.2
 ```
 
 Check that the compiler is on `PATH`:
@@ -76,19 +76,16 @@ Check that the compiler is on `PATH`:
 > uplc-ghc --version
 ```
 
-If you have already installed it this way, skip to step 2. Make sure the
-installed version is 9.6.166.2 or newer: on Windows, older releases do not
-work with the `cabal.project` below (they lack the `uplc-ghc-pkg` shim). Run
-the two `install`/`set` commands above again to update.
+If you have already installed 9.6.169.2 this way, skip to step 2.
 
 ## Step 2: Create the project
 
 Make a new directory and add the three files below. They are identical to the
 Linux/macOS tutorial's files.
 
-**`cabal.project`** wires up the build. It points cabal at `uplc-ghc` and its
-`ghc-pkg` (installed by ghcup as `uplc-ghc-pkg`, so that it does not collide
-with your regular GHC); pulls the
+**`cabal.project`** wires up the build. It points cabal at `uplc-ghc`
+9.6.169.2 and its `ghc-pkg` (installed by ghcup as `uplc-ghc-pkg-9.6.169.2`,
+so that it does not collide with your regular GHC); pulls the
 Plinth libraries (`plutus-tx`, `plutus-core`) from the
 `ghc-plinth-plutus` fork the compiler was built against; uses the Cardano
 package repository (CHaP) for the remaining dependencies; and builds the Cardano
@@ -100,8 +97,10 @@ The `with-hc-pkg` line is essential on Windows: without it, cabal picks up the
 [Use uplc-ghc in a project]({% link how-to/use.md %})):
 
 ```haskell
-with-compiler: uplc-ghc
-with-hc-pkg:   uplc-ghc-pkg
+-- The uplc-ghc release. The ghc-plinth-plutus tag below must be the commit
+-- that this release is built from.
+with-compiler: uplc-ghc-9.6.169.2
+with-hc-pkg:   uplc-ghc-pkg-9.6.169.2
 
 packages: .
 
@@ -168,9 +167,11 @@ package sodium-clib
 
 Use the `ghc-plinth-plutus` commit that matches your `uplc-ghc`: the compiler and
 these libraries are released together as a matched set, built from the same
-commit. The commit above matches release 9.6.169.2 (the current ghcup
-`latest`); for a different `uplc-ghc`, use the plutus commit it was built
-from.
+commit. The commit above matches release 9.6.169.2, the release in
+`with-compiler`. To use a different release, change `with-compiler`,
+`with-hc-pkg` and this `tag` together. The commit of a release is the `plutus`
+submodule of its tag (`v<version>`) in
+[ghc-plinth](https://github.com/input-output-hk/ghc-plinth).
 
 **Not for production.** The vendored crypto C libraries pulled in by the
 `*-clib` `source-repository-package`s above have not been audited. Use this
