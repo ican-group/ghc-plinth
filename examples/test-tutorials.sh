@@ -11,7 +11,8 @@
 # Usage: test-tutorials.sh [onchain|offchain-build|e2e]...
 # With no argument, run all stages.
 #
-# onchain needs uplc-ghc/uplc-ghc-pkg on PATH (ghcup install plinth).
+# onchain needs the uplc-ghc release named in examples/add/cabal.project
+# (ghcup install plinth <version>).
 # offchain-build needs the GHC named in examples/lock-ghci/cabal.project
 # and the system LMDB and liburing libraries (liblmdb-dev and
 # liburing-dev on Debian/Ubuntu).

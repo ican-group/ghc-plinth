@@ -16,8 +16,11 @@ files byte-identical to the code blocks of its tutorial page.
   cardano-api". The same helpers as `lock-ghci/`, rebuilt on
   Cardano.Api.Experimental.
 
-`add/` and `lock/` build with the ghcup-installed compiler: `cabal build`
-with `uplc-ghc` and `uplc-ghc-pkg` on PATH.
+`add/` and `lock/` build with the uplc-ghc release named in their
+`cabal.project` (`with-compiler`). Install it with
+`ghcup install plinth <version>`. The `ghc-plinth-plutus` tag in the same
+file is the commit that this release is built from: change the two
+together.
 
 `test-tutorials.sh` tests all of it, including the GHCi sessions against a
 real devnet; CI runs it (.github/workflows/tutorials.yml) on changes to

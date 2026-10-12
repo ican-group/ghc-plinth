@@ -1,9 +1,9 @@
 name: Tutorials
 
 # Test the tutorial example projects (examples/) the way a reader runs
-# them: the released uplc-ghc from the ghcup channel for the on-chain
-# projects, a stock GHC for the off-chain ones, and a Yaci DevKit devnet
-# for the end-to-end GHCi sessions. The weekly run catches bitrot in the
+# them: the uplc-ghc release they name, from the ghcup channel, for the
+# on-chain projects, a stock GHC for the off-chain ones, and a Yaci DevKit
+# devnet for the end-to-end GHCi sessions. The weekly run catches bitrot in the
 # release channel, CHaP and the devkit images even when examples/ does
 # not change.
 
@@ -51,13 +51,23 @@ jobs:
         sudo mkswap /mnt/swapfile
         sudo swapon /mnt/swapfile
 
-    - name: Install the released uplc-ghc from the ghcup channel
+    # Install the release that examples/*/cabal.project name in with-compiler,
+    # as the tutorials tell the reader to do.
+    - name: Install the uplc-ghc release of the examples
       run: |
+        set -eu
+        VERSION=$(sed -n 's/^with-compiler: *uplc-ghc-//p' examples/add/cabal.project)
+        for f in examples/add/cabal.project examples/lock/cabal.project; do
+          if ! grep -qx "with-compiler: uplc-ghc-$VERSION" "$f"; then
+            echo "error: $f does not use uplc-ghc-$VERSION"
+            exit 1
+          fi
+        done
         ghcup config add-release-channel https://raw.githubusercontent.com/input-output-hk/ghc-plinth/ghcup-channel/ghcup-plinth.yaml
-        ghcup install plinth latest
-        ghcup set plinth latest
-        uplc-ghc --version
-        uplc-ghc-pkg --version
+        ghcup install plinth "$VERSION"
+        ghcup set plinth "$VERSION"
+        "uplc-ghc-$VERSION" --version
+        "uplc-ghc-pkg-$VERSION" --version
 
     - name: Cache cabal store
       uses: actions/cache@v4
