@@ -5,6 +5,7 @@ build-type:    Simple
 
 library
   exposed-modules:  Offchain
+  other-modules:    Chain
   hs-source-dirs:   .
   default-language: GHC2021
   build-depends:
