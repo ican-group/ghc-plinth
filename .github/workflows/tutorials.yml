@@ -69,18 +69,21 @@ jobs:
         path: |
           ~/.cabal/store
           ~/.cabal/packages
-        key: tutorials-onchain-${{ runner.os }}-${{ hashFiles('examples/add/cabal.project', 'examples/lock/cabal.project') }}
+        key: tutorials-onchain-${{ runner.os }}-${{ hashFiles('examples/add/cabal.project', 'examples/lock/cabal.project', 'examples/auction/cabal.project') }}
         restore-keys: tutorials-onchain-${{ runner.os }}-
 
     - name: Build and run the on-chain projects
       run: examples/test-tutorials.sh onchain
 
-    # The off-chain job's GHCi sessions spend from this validator.
-    - name: Upload lock.plutus
+    # The off-chain job's GHCi sessions use these validators. The artifact
+    # keeps the paths below examples/.
+    - name: Upload the validators
       uses: actions/upload-artifact@v4
       with:
-        name: lock-plutus
-        path: examples/lock/lock.plutus
+        name: validators
+        path: |
+          examples/lock/lock.plutus
+          examples/auction/auction.plutus
 
   # The on-chain projects on Windows, as tutorials/first-smart-contract-windows
   # sets them up: a stock ghcup and cabal, git with long paths, and the
@@ -146,7 +149,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ steps.setup.outputs.cabal-store }}
-        key: tutorials-onchain-${{ runner.os }}-${{ hashFiles('examples/add/cabal.project', 'examples/lock/cabal.project') }}
+        key: tutorials-onchain-${{ runner.os }}-${{ hashFiles('examples/add/cabal.project', 'examples/lock/cabal.project', 'examples/auction/cabal.project') }}
         restore-keys: tutorials-onchain-${{ runner.os }}-
 
     # JOBS=1: compiling with the Plinth plugin is memory-heavy (see the
@@ -193,15 +196,15 @@ jobs:
         path: |
           ~/.cabal/store
           ~/.cabal/packages
-        key: tutorials-offchain-${{ runner.os }}-${{ hashFiles('examples/lock-ghci/cabal.project') }}
+        key: tutorials-offchain-${{ runner.os }}-${{ hashFiles('examples/lock-ghci/cabal.project', 'examples/auction-ghci/cabal.project') }}
         restore-keys: tutorials-offchain-${{ runner.os }}-
 
-    # The GHCi sessions spend from the validator the on-chain job built.
-    - name: Download lock.plutus
+    # The GHCi sessions use the validators the on-chain job built.
+    - name: Download the validators
       uses: actions/download-artifact@v4
       with:
-        name: lock-plutus
-        path: examples/lock
+        name: validators
+        path: examples
 
     - name: Build the off-chain projects and run the devnet sessions
       run: examples/test-tutorials.sh offchain-build e2e
