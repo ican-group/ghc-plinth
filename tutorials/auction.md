@@ -399,7 +399,7 @@ use it at the chain directly: there is no address for it yet.
 
 ## Step 3: The off-chain helpers
 
-Make a directory `auction-ghci` with three files.
+Make a directory `auction-ghci` with four files.
 
 **`cabal.project`** is the same as in the
 [GHCi lock tutorial]({% link tutorials/lock-and-unlock-ghci.md %}):
@@ -479,6 +479,7 @@ build-type:    Simple
 
 library
   exposed-modules:  Offchain
+  other-modules:    Chain
   hs-source-dirs:   .
   default-language: GHC2021
   build-depends:
@@ -499,34 +500,32 @@ library
     -Wno-deprecations
 ```
 
-**`Offchain.hs`** has the helpers:
+**`Chain.hs`** has the plumbing. It is not specific to the auction, and you
+know most of it from the lock tutorial: the connection to the devnet, the
+wallet keys (one file `<name>.skey` for each wallet, made on first use), the
+queries, and `submitAndWait`, which balances, signs and submits a transaction
+and waits until it is in a block. You can copy it without reading it:
 
 ```haskell
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NumericUnderscores #-}
-{-# LANGUAGE OverloadedStrings #-}
 
--- | Helpers to run an auction from GHCi against a local devnet: three
--- wallets (the seller, Alice and Bob), and one function for each step of
--- the auction: start, bid, pay out.
-module Offchain where
+-- | The plumbing of the auction helpers, as in the lock tutorial: the
+-- connection to the devnet, wallet keys, chain queries, and the
+-- submission of transactions. Nothing here is specific to the auction.
+module Chain where
 
 import Cardano.Api
 import Cardano.Api.Network qualified as Net
 import Cardano.Ledger.Compactible (fromCompact)
-import PlutusCore qualified as PLC
-import PlutusLedgerApi.Common (serialiseUPLC, uncheckedDeserialiseUPLC)
-import UntypedPlutusCore qualified as UPLC
 
 import Control.Concurrent (threadDelay)
-import Control.Monad (unless)
 import Data.Function ((&))
 import Data.List (find, sortOn)
 import Data.Map.Strict qualified as Map
 import Data.Ord (Down (..))
 import Data.Set qualified as Set
 import Data.Text qualified as Text
-import Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds)
 import System.Directory (doesFileExist)
 
 -- ---------------------------------------------------------------------
@@ -557,11 +556,6 @@ newtype Wallet = Wallet String
 instance Show Wallet where
   show (Wallet name) = name
 
-seller, alice, bob :: Wallet
-seller = Wallet "seller"
-alice = Wallet "alice"
-bob = Wallet "bob"
-
 -- | Load the key of a wallet, generating and saving it on first use.
 walletKey :: Wallet -> IO (SigningKey PaymentKey)
 walletKey (Wallet name) = do
@@ -574,7 +568,7 @@ walletKey (Wallet name) = do
       _ <- orDie =<< writeFileTextEnvelope (File path) Nothing skey
       pure skey
 
--- | The key hash of a wallet: what the auction datum records.
+-- | The key hash of a wallet.
 walletKeyHash :: Wallet -> IO (Hash PaymentKey)
 walletKeyHash w = verificationKeyHash . getVerificationKey <$> walletKey w
 
@@ -585,9 +579,181 @@ walletAddress w = keyHashAddress <$> walletKeyHash w
 keyHashAddress :: Hash PaymentKey -> Address ShelleyAddr
 keyHashAddress h = makeShelleyAddress network (PaymentCredentialByKey h) NoStakeAddress
 
+scriptAddressOf :: PlutusScript PlutusScriptV3 -> Address ShelleyAddr
+scriptAddressOf script =
+  makeShelleyAddress network
+    (PaymentCredentialByScript (hashScript (PlutusScript PlutusScriptV3 script)))
+    NoStakeAddress
+
 -- | An address in its text form (to paste in a topup command).
 bech32 :: Address ShelleyAddr -> String
 bech32 = Text.unpack . serialiseAddress
+
+-- ---------------------------------------------------------------------
+-- Queries
+
+-- | The unspent outputs at an address, largest first.
+utxosAt :: Address ShelleyAddr -> IO [(TxIn, TxOut CtxUTxO ConwayEra)]
+utxosAt addr = do
+  let query = queryUtxo sbe (QueryUTxOByAddress (Set.singleton (toAddressAny addr)))
+  result <- executeLocalStateQueryExpr conn Net.VolatileTip query
+  UTxO utxo <- orDie =<< orDie =<< orDie result
+  pure $ sortOn (\(_, out) -> Down (selectLovelace (outValue out))) (Map.toList utxo)
+
+-- | The largest output of a wallet that holds only ada: it pays for the
+-- transaction, and it is the collateral.
+adaUtxo :: Wallet -> IO (TxIn, TxOut CtxUTxO ConwayEra)
+adaUtxo w = do
+  utxos <- utxosAt =<< walletAddress w
+  case find (\(_, out) -> length (valueToList (outValue out)) == 1) utxos of
+    Just u -> pure u
+    Nothing -> fail (show w <> " has no ada: fund it with topup")
+
+-- | The current slot, and what is needed to convert slots to time.
+chainTime :: IO (SlotNo, SystemStart, EraHistory)
+chainTime = do
+  result <- executeLocalStateQueryExpr conn Net.VolatileTip $ do
+    point <- queryChainPoint
+    start <- querySystemStart
+    history <- queryEraHistory
+    pure ((,,) <$> point <*> start <*> history)
+  (point, start, history) <- orDie =<< orDie result
+  case chainPointToSlotNo point of
+    Just slot -> pure (slot, start, history)
+    Nothing -> fail "the chain has no blocks yet"
+
+-- ---------------------------------------------------------------------
+-- Outputs and values
+
+ada :: Integer -> Coin
+ada n = Coin (n * 1_000_000)
+
+outValue :: TxOut ctx ConwayEra -> Value
+outValue (TxOut _ v _ _) = txOutValueToValue v
+
+outDatum :: TxOut ctx ConwayEra -> Maybe ScriptData
+outDatum (TxOut _ _ d _) = case d of
+  TxOutDatumInline _ sd -> Just (getScriptData sd)
+  _ -> Nothing
+
+valueOut :: Value -> TxOutValue ConwayEra
+valueOut v = TxOutValueShelleyBased sbe (toLedgerValue MaryEraOnwardsConway v)
+
+prettyTxIn :: TxIn -> String
+prettyTxIn (TxIn txid (TxIx ix)) =
+  take 8 (Text.unpack (serialiseToRawBytesHexText txid)) <> "...#" <> show ix
+
+prettyAda :: Coin -> String
+prettyAda (Coin l) =
+  let (whole, frac) = l `divMod` 1_000_000
+      digits = reverse (dropWhile (== '0') (reverse (pad6 (show frac))))
+      pad6 s = replicate (6 - length s) '0' <> s
+  in show whole <> (if null digits then "" else "." <> digits) <> " ada"
+
+-- ---------------------------------------------------------------------
+-- Transactions
+
+-- Note [Balancing a transaction]
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- constructBalancedTx computes the fee, adds the change output, runs the
+-- Plutus scripts to measure their budget, and signs. It needs the
+-- current chain state: queryStateForBalancedTx fetches all of it in one
+-- connection. constructBalancedTx does not put the protocol parameters
+-- in the transaction body itself, and without them the node rejects the
+-- transaction with "ScriptIntegrityHashMismatch", so we set them.
+
+-- | Balance the transaction (the change goes to the wallet), sign it with
+-- the wallet key, submit it, and wait until it is in a block.
+submitAndWait :: Wallet -> [TxIn] -> TxBodyContent BuildTx ConwayEra -> IO ()
+submitAndWait w inputs content = do
+  skey <- walletKey w
+  changeAddr <- shelleyAddressInEra sbe <$> walletAddress w
+  queried <-
+    executeLocalStateQueryExpr conn Net.VolatileTip $
+      queryStateForBalancedTx (toCardanoEra sbe) inputs []
+  (utxo, pparams, eraHistory, systemStart, stakePools, stakeDeposits, drepDeposits, _) <-
+    orDie =<< orDie queried
+  tx <-
+    orDieBalance $
+      constructBalancedTx
+        sbe
+        (content & setTxProtocolParams (BuildTxWith (Just pparams)))
+        changeAddr
+        Nothing
+        utxo
+        pparams
+        (toLedgerEpochInfo eraHistory)
+        systemStart
+        stakePools
+        stakeDeposits
+        (Map.map fromCompact drepDeposits)
+        [WitnessPaymentKey skey]
+  let txid = getTxId (getTxBody tx)
+  submitTxToNodeLocal conn (TxInMode sbe tx) >>= \case
+    TxSubmitSuccess -> pure ()
+    failure -> fail (show failure)
+  putStrLn ("submitted " <> take 8 (Text.unpack (serialiseToRawBytesHexText txid)) <> "..., waiting for a block")
+  waitForTx txid
+
+-- | Wait until the first output of a transaction is on the chain.
+waitForTx :: TxId -> IO ()
+waitForTx txid = go (60 :: Int)
+  where
+    go 0 = fail "the transaction is not in a block after 60 seconds"
+    go n = do
+      let query = queryUtxo sbe (QueryUTxOByTxIn (Set.singleton (TxIn txid (TxIx 0))))
+      result <- executeLocalStateQueryExpr conn Net.VolatileTip query
+      UTxO utxo <- orDie =<< orDie =<< orDie result
+      if Map.null utxo then threadDelay 1_000_000 >> go (n - 1) else pure ()
+
+orDie :: Show e => Either e a -> IO a
+orDie = either (fail . show) pure
+
+-- Render a validator rejection by its trace messages, not by the full
+-- Show dump of the balancing error.
+orDieBalance :: Either (TxBodyErrorAutoBalance ConwayEra) a -> IO a
+orDieBalance = \case
+  Right a -> pure a
+  Left (TxBodyScriptExecutionError [(_, ScriptErrorEvaluationFailed failure)]) ->
+    fail $ "the validator rejected the transaction: " <> case dpfExecutionLogs failure of
+      [] -> show (dpfEvaluationError failure)
+      logs -> show logs
+  Left err -> fail (show err)
+```
+
+**`Offchain.hs`** has the auction:
+
+```haskell
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE NumericUnderscores #-}
+{-# LANGUAGE OverloadedStrings #-}
+
+-- | Helpers to run an auction from GHCi against a local devnet: three
+-- wallets (the seller, Alice and Bob), and one function for each step of
+-- the auction: start, bid, pay out. The plumbing is in Chain.
+module Offchain where
+
+import Cardano.Api
+import PlutusCore qualified as PLC
+import PlutusLedgerApi.Common (serialiseUPLC, uncheckedDeserialiseUPLC)
+import UntypedPlutusCore qualified as UPLC
+
+import Control.Concurrent (threadDelay)
+import Control.Monad (unless)
+import Data.Function ((&))
+import Data.List (find)
+import Data.Map.Strict qualified as Map
+import Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds)
+
+import Chain
+
+-- ---------------------------------------------------------------------
+-- Wallets
+
+seller, alice, bob :: Wallet
+seller = Wallet "seller"
+alice = Wallet "alice"
+bob = Wallet "bob"
 
 -- | Print the unspent outputs of a wallet.
 showWallet :: Wallet -> IO ()
@@ -648,6 +814,19 @@ data Auction = Auction
 
 instance Show Auction where
   show a = "auction at " <> bech32 (auctionAddress a) <> ", bids until slot " <> show (unSlotNo (auctionEnd a))
+
+-- | The witness that spends the auction output: the script, the inline
+-- datum of the output, and the redeemer. The execution units are left at
+-- zero: balancing measures them by running the script.
+spendWith :: Auction -> ScriptData -> ScriptWitness WitCtxTxIn ConwayEra
+spendWith auction redeemer =
+  PlutusScriptWitness
+    PlutusScriptV3InConway
+    PlutusScriptV3
+    (PScript (auctionScript auction))
+    InlineScriptDatum
+    (unsafeHashableScriptData redeemer)
+    (ExecutionUnits 0 0)
 
 -- ---------------------------------------------------------------------
 -- On-chain data, encoded as ScriptData
@@ -713,9 +892,6 @@ decodeDatum = \case
 -- a minimum amount of ada.
 itemDeposit :: Coin
 itemDeposit = 2_000_000
-
-ada :: Integer -> Coin
-ada n = Coin (n * 1_000_000)
 
 -- | Start an auction: mint the item and lock it at the auction address,
 -- with no bid in the datum. The bidding ends after the given number of
@@ -849,6 +1025,19 @@ fakeBid auction w amountAda = do
       & setTxIns [(walletIn, BuildTxWith (KeyWitness KeyWitnessForSpending))]
       & setTxOuts [fake]
 
+-- ---------------------------------------------------------------------
+-- The auction output
+
+-- | The auction output: the one output at the auction address that holds
+-- the item. Other outputs there are not the auction (see fakeBid).
+currentAuction :: Auction -> IO (TxIn, TxOut CtxUTxO ConwayEra)
+currentAuction auction = do
+  item <- itemAsset
+  utxos <- utxosAt (auctionAddress auction)
+  case find (\(_, out) -> selectAsset (outValue out) item == 1) utxos of
+    Just u -> pure u
+    Nothing -> fail "no auction output: the auction is over"
+
 -- | Print the outputs at the auction address. Only the output that holds
 -- the item is the auction.
 showAuction :: Auction -> IO ()
@@ -862,92 +1051,8 @@ showAuction auction = do
           <> if selectAsset (outValue out) item == 1 then "  <- the auction" else "  (no item: not the auction)"
   mapM_ (putStrLn . render) utxos
 
--- ---------------------------------------------------------------------
--- Plumbing
-
--- | The auction output: the one output at the auction address that holds
--- the item. Other outputs there are not the auction (see fakeBid).
-currentAuction :: Auction -> IO (TxIn, TxOut CtxUTxO ConwayEra)
-currentAuction auction = do
-  item <- itemAsset
-  utxos <- utxosAt (auctionAddress auction)
-  case find (\(_, out) -> selectAsset (outValue out) item == 1) utxos of
-    Just u -> pure u
-    Nothing -> fail "no auction output: the auction is over"
-
--- | The witness that spends the auction output: the script, the inline
--- datum of the output, and the redeemer. The execution units are left at
--- zero: balancing measures them by running the script.
-spendWith :: Auction -> ScriptData -> ScriptWitness WitCtxTxIn ConwayEra
-spendWith auction redeemer =
-  PlutusScriptWitness
-    PlutusScriptV3InConway
-    PlutusScriptV3
-    (PScript (auctionScript auction))
-    InlineScriptDatum
-    (unsafeHashableScriptData redeemer)
-    (ExecutionUnits 0 0)
-
-scriptAddressOf :: PlutusScript PlutusScriptV3 -> Address ShelleyAddr
-scriptAddressOf script =
-  makeShelleyAddress network
-    (PaymentCredentialByScript (hashScript (PlutusScript PlutusScriptV3 script)))
-    NoStakeAddress
-
--- | The unspent outputs at an address, largest first.
-utxosAt :: Address ShelleyAddr -> IO [(TxIn, TxOut CtxUTxO ConwayEra)]
-utxosAt addr = do
-  let query = queryUtxo sbe (QueryUTxOByAddress (Set.singleton (toAddressAny addr)))
-  result <- executeLocalStateQueryExpr conn Net.VolatileTip query
-  UTxO utxo <- orDie =<< orDie =<< orDie result
-  pure $ sortOn (\(_, out) -> Down (selectLovelace (outValue out))) (Map.toList utxo)
-
--- | The largest output of a wallet that holds only ada: it pays for the
--- transaction, and it is the collateral.
-adaUtxo :: Wallet -> IO (TxIn, TxOut CtxUTxO ConwayEra)
-adaUtxo w = do
-  utxos <- utxosAt =<< walletAddress w
-  case find (\(_, out) -> length (valueToList (outValue out)) == 1) utxos of
-    Just u -> pure u
-    Nothing -> fail (show w <> " has no ada: fund it with topup")
-
--- | The current slot, and what is needed to convert slots to time.
-chainTime :: IO (SlotNo, SystemStart, EraHistory)
-chainTime = do
-  result <- executeLocalStateQueryExpr conn Net.VolatileTip $ do
-    point <- queryChainPoint
-    start <- querySystemStart
-    history <- queryEraHistory
-    pure ((,,) <$> point <*> start <*> history)
-  (point, start, history) <- orDie =<< orDie result
-  case chainPointToSlotNo point of
-    Just slot -> pure (slot, start, history)
-    Nothing -> fail "the chain has no blocks yet"
-
-outValue :: TxOut ctx ConwayEra -> Value
-outValue (TxOut _ v _ _) = txOutValueToValue v
-
-outDatum :: TxOut ctx ConwayEra -> Maybe ScriptData
-outDatum (TxOut _ _ d _) = case d of
-  TxOutDatumInline _ sd -> Just (getScriptData sd)
-  _ -> Nothing
-
-valueOut :: Value -> TxOutValue ConwayEra
-valueOut v = TxOutValueShelleyBased sbe (toLedgerValue MaryEraOnwardsConway v)
-
 walletNames :: IO [(Hash PaymentKey, String)]
 walletNames = mapM (\w -> (,show w) <$> walletKeyHash w) [seller, alice, bob]
-
-prettyTxIn :: TxIn -> String
-prettyTxIn (TxIn txid (TxIx ix)) =
-  take 8 (Text.unpack (serialiseToRawBytesHexText txid)) <> "...#" <> show ix
-
-prettyAda :: Coin -> String
-prettyAda (Coin l) =
-  let (whole, frac) = l `divMod` 1_000_000
-      digits = reverse (dropWhile (== '0') (reverse (pad6 (show frac))))
-      pad6 s = replicate (6 - length s) '0' <> s
-  in show whole <> (if null digits then "" else "." <> digits) <> " ada"
 
 prettyValue :: AssetId -> Value -> String
 prettyValue item v =
@@ -959,80 +1064,11 @@ prettyDatum names d = case d >>= decodeDatum of
   Just (Just (pkh, amount)) ->
     "highest bid: " <> maybe "someone" id (lookup pkh names) <> ", " <> prettyAda amount
   Nothing -> "no auction datum"
-
--- Note [Balancing a transaction]
--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
--- constructBalancedTx computes the fee, adds the change output, runs the
--- Plutus scripts to measure their budget, and signs. It needs the
--- current chain state: queryStateForBalancedTx fetches all of it in one
--- connection. constructBalancedTx does not put the protocol parameters
--- in the transaction body itself, and without them the node rejects the
--- transaction with "ScriptIntegrityHashMismatch", so we set them.
-
--- | Balance the transaction (the change goes to the wallet), sign it with
--- the wallet key, submit it, and wait until it is in a block.
-submitAndWait :: Wallet -> [TxIn] -> TxBodyContent BuildTx ConwayEra -> IO ()
-submitAndWait w inputs content = do
-  skey <- walletKey w
-  changeAddr <- shelleyAddressInEra sbe <$> walletAddress w
-  queried <-
-    executeLocalStateQueryExpr conn Net.VolatileTip $
-      queryStateForBalancedTx (toCardanoEra sbe) inputs []
-  (utxo, pparams, eraHistory, systemStart, stakePools, stakeDeposits, drepDeposits, _) <-
-    orDie =<< orDie queried
-  tx <-
-    orDieBalance $
-      constructBalancedTx
-        sbe
-        (content & setTxProtocolParams (BuildTxWith (Just pparams)))
-        changeAddr
-        Nothing
-        utxo
-        pparams
-        (toLedgerEpochInfo eraHistory)
-        systemStart
-        stakePools
-        stakeDeposits
-        (Map.map fromCompact drepDeposits)
-        [WitnessPaymentKey skey]
-  let txid = getTxId (getTxBody tx)
-  submitTxToNodeLocal conn (TxInMode sbe tx) >>= \case
-    TxSubmitSuccess -> pure ()
-    failure -> fail (show failure)
-  putStrLn ("submitted " <> take 8 (Text.unpack (serialiseToRawBytesHexText txid)) <> "..., waiting for a block")
-  waitForTx txid
-
--- | Wait until the first output of a transaction is on the chain.
-waitForTx :: TxId -> IO ()
-waitForTx txid = go (60 :: Int)
-  where
-    go 0 = fail "the transaction is not in a block after 60 seconds"
-    go n = do
-      let query = queryUtxo sbe (QueryUTxOByTxIn (Set.singleton (TxIn txid (TxIx 0))))
-      result <- executeLocalStateQueryExpr conn Net.VolatileTip query
-      UTxO utxo <- orDie =<< orDie =<< orDie result
-      if Map.null utxo then threadDelay 1_000_000 >> go (n - 1) else pure ()
-
-orDie :: Show e => Either e a -> IO a
-orDie = either (fail . show) pure
-
--- Render a validator rejection by its trace messages, not by the full
--- Show dump of the balancing error.
-orDieBalance :: Either (TxBodyErrorAutoBalance ConwayEra) a -> IO a
-orDieBalance = \case
-  Right a -> pure a
-  Left (TxBodyScriptExecutionError [(_, ScriptErrorEvaluationFailed failure)]) ->
-    fail $ "the validator rejected the transaction: " <> case dpfExecutionLogs failure of
-      [] -> show (dpfEvaluationError failure)
-      logs -> show logs
-  Left err -> fail (show err)
 ```
 
-It is long, but most of it is plumbing that you know from the lock tutorial.
-Read these parts:
+Read it from top to bottom:
 
-- **Wallets.** There are three: `seller`, `alice` and `bob`. Each one is a key
-  in a file (`seller.skey`, ...), made on first use.
+- **Wallets.** There are three: `seller`, `alice` and `bob`.
 - **The item.** `itemPolicy` is a *simple script* (a script without Plutus):
   only the seller's key can mint the item.
 - **The parameters.** `applyParams` makes the script of one auction from
