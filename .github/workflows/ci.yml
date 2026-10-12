@@ -87,14 +87,19 @@ jobs:
         set -eu
         PLUTUS=$(git ls-tree HEAD plutus | awk '{print $3}')
         git fetch -q --depth 1 origin gh-pages
-        # Print "file tag" for each ghc-plinth-plutus source-repository-package.
+        DOCS=$(git rev-parse FETCH_HEAD)
+        # Print "$1 tag" for each ghc-plinth-plutus source-repository-package
+        # on stdin.
         list_pins() {
-          awk '/location: .*ghc-plinth-plutus/ { want = 1; next }
-               want && /tag:/ { print FILENAME, $2; want = 0 }' "$@"
+          awk -v file="$1" '/location: .*ghc-plinth-plutus/ { want = 1; next }
+                            want && /tag:/ { print file, $2; want = 0 }'
         }
-        mkdir -p .gh-pages
-        git archive origin/gh-pages | tar -x -C .gh-pages
-        PINS=$(list_pins examples/*/cabal.project $(grep -rl ghc-plinth-plutus .gh-pages --include='*.md'))
+        PINS=$(
+          for f in examples/*/cabal.project; do list_pins "$f" < "$f"; done
+          for f in $(git ls-tree -r --name-only "$DOCS" | grep '\.md$'); do
+            git show "$DOCS:$f" | list_pins "gh-pages:$f"
+          done
+        )
         if [ -z "$PINS" ]; then
           echo "error: found no ghc-plinth-plutus pin"
           exit 1
