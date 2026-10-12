@@ -65,8 +65,10 @@ ledger types (`ScriptContext`, `Datum`, ...) and the script serialisation
 helpers:
 
 ```haskell
-with-compiler: uplc-ghc
-with-hc-pkg:   uplc-ghc-pkg
+-- The uplc-ghc release. The ghc-plinth-plutus tag below must be the commit
+-- that this release is built from.
+with-compiler: uplc-ghc-9.6.169.2
+with-hc-pkg:   uplc-ghc-pkg-9.6.169.2
 
 packages: .
 
