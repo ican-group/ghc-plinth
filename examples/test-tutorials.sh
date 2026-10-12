@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
 # Test the tutorial example projects, as CI does. Stages:
 #
-#   onchain        build examples/add and examples/lock with uplc-ghc and
-#                  check the files they write
-#   offchain-build build examples/lock-ghci and examples/lock-ghci-exp
-#                  with a standard GHC
-#   e2e            run both GHCi sessions against a Yaci DevKit devnet:
-#                  lock, unlock, and the wrong-redeemer rejection
+#   onchain        build examples/add, examples/lock and examples/auction
+#                  with uplc-ghc and check the files they write
+#   offchain-build build examples/lock-ghci, examples/lock-ghci-exp and
+#                  examples/auction-ghci with a standard GHC
+#   e2e            run the GHCi sessions against a Yaci DevKit devnet:
+#                  lock, unlock, and the wrong-redeemer rejection; then a
+#                  whole auction with its rejected bids
 #
 # Usage: test-tutorials.sh [onchain|offchain-build|e2e]...
 # With no argument, run all stages.
 #        test-tutorials.sh version
-# Print the uplc-ghc release that add/ and lock/ name in with-compiler.
+# Print the uplc-ghc release that the on-chain projects name in
+# with-compiler.
 #
 # onchain needs that release (ghcup install plinth <version>). JOBS=n
 # limits cabal to n parallel package builds (default: one per CPU).
@@ -28,18 +30,20 @@ DEVKIT_DIR="$HOME/.yaci-devkit"
 
 log() { printf '\n=== %s\n' "$*"; }
 
-# The uplc-ghc release of add/ and lock/ (with-compiler: uplc-ghc-<version>).
-# Fail if they do not name the same one.
+# The uplc-ghc release of the on-chain projects (with-compiler:
+# uplc-ghc-<version>). Fail if they do not all name the same one.
 plinth_version() {
-  local add lock
-  add=$(sed -n 's/^with-compiler: *uplc-ghc-//p' "$EXAMPLES_DIR/add/cabal.project")
-  lock=$(sed -n 's/^with-compiler: *uplc-ghc-//p' "$EXAMPLES_DIR/lock/cabal.project")
-  if [ -z "$add" ] || [ "$add" != "$lock" ]; then
-    echo "error: add/ and lock/ must name the same uplc-ghc release" \
-         "(add: '$add', lock: '$lock')" >&2
-    return 1
-  fi
-  echo "$add"
+  local p v first=
+  for p in add lock auction; do
+    v=$(sed -n 's/^with-compiler: *uplc-ghc-//p' "$EXAMPLES_DIR/$p/cabal.project")
+    if [ -z "$v" ] || { [ -n "$first" ] && [ "$v" != "$first" ]; }; then
+      echo "error: add/, lock/ and auction/ must name the same uplc-ghc" \
+           "release ($p/ names '$v')" >&2
+      return 1
+    fi
+    first=$v
+  done
+  echo "$first"
 }
 
 # Retry a command a few times, 30s apart. Use it for the network-facing
@@ -79,6 +83,13 @@ stage_onchain() {
     grep -F '"type": "PlutusScriptV3"' lock.plutus
     grep -E '"cborHex": "[0-9a-f]+"' lock.plutus >/dev/null
   )
+
+  log "onchain: examples/auction"
+  ( cd "$EXAMPLES_DIR/auction"
+    cabal build ${JOBS:+--jobs="$JOBS"}
+    cabal run -v0 plinth-auction
+    grep -F '"type": "PlutusScriptV3"' auction.plutus
+  )
   log "onchain: OK"
 }
 
@@ -87,7 +98,7 @@ stage_onchain() {
 # ---------------------------------------------------------------------------
 
 stage_offchain_build() {
-  for project in lock-ghci lock-ghci-exp; do
+  for project in lock-ghci lock-ghci-exp auction-ghci; do
     log "offchain-build: examples/$project"
     ( cd "$EXAMPLES_DIR/$project"
       retry 3 cabal update
@@ -201,6 +212,65 @@ EOF
   echo "$script_addr"
 }
 
+# Run the auction tutorial session: start, two bids, a bid that is too
+# low, a fake output at the auction address, a bid after the end, and the
+# payout. Fails if any step misbehaves.
+run_auction_session() {
+  cd "$EXAMPLES_DIR/auction-ghci"
+  rm -f seller.skey alice.skey bob.skey node.sock
+  cp "$EXAMPLES_DIR/auction/auction.plutus" .
+  socat UNIX-LISTEN:node.sock,fork,reuseaddr TCP:127.0.0.1:3333 &
+  local socat_pid=$!
+  sleep 1
+
+  local w addr
+  for w in seller alice bob; do
+    addr=$(echo "putStrLn . bech32 =<< walletAddress $w" | cabal repl -v0)
+    console_send "topup $addr 1000"
+    wait_for "topup of $w" 30 \
+      "in_container 'cardano-cli conway query utxo --address $addr --testnet-magic 42' | grep -q lovelace"
+  done
+
+  local session
+  session=$(cabal repl -v0 2>&1 <<'EOF'
+auction <- startAuction 50 90
+showAuction auction
+bid auction alice 100
+showAuction auction
+bid auction bob 150
+showAuction auction
+showWallet alice
+bid auction alice 120
+fakeBid auction bob 1000
+showAuction auction
+waitForEnd auction
+bid auction alice 200
+payout auction
+showWallet bob
+showWallet seller
+EOF
+  ) || true
+  echo "--- auction-ghci session:" >&2
+  echo "$session" >&2
+
+  kill "$socat_pid" 2>/dev/null || true
+
+  # Each state of the auction, as the tutorial shows it.
+  echo "$session" | grep -q 'the item + 2 ada, no bid yet  <- the auction'
+  echo "$session" | grep -q 'the item + 100 ada, highest bid: alice, 100 ada  <- the auction'
+  echo "$session" | grep -q 'the item + 150 ada, highest bid: bob, 150 ada  <- the auction'
+  # Alice got her 100 ada back.
+  echo "$session" | grep -qE '^[0-9a-f]{8}\.\.\.#1: 100 ada$'
+  # The low bid failed in the validator, the fake output is not the
+  # auction, and the late bid failed in the ledger.
+  echo "$session" | grep -q 'bid too low'
+  echo "$session" | grep -q '5 ada, highest bid: bob, 1000 ada  (no item: not the auction)'
+  echo "$session" | grep -q 'OutsideValidityIntervalUTxO'
+  # Bob has the item, the seller has the 150 ada.
+  echo "$session" | grep -qE ': the item \+ 2 ada$'
+  echo "$session" | grep -qE ': 150 ada$'
+}
+
 stage_e2e() {
   log "e2e: install Yaci DevKit $DEVKIT_VERSION"
   if ! grep -qs "$DEVKIT_VERSION" "$DEVKIT_DIR/config/version"; then
@@ -226,7 +296,11 @@ stage_e2e() {
 
   # Both interfaces must compute the same script address.
   [ "$addr_classic" = "$addr_exp" ]
-  log "e2e: OK (script address $addr_classic)"
+
+  log "e2e: auction session with examples/auction-ghci"
+  run_auction_session
+
+  log "e2e: OK (lock script address $addr_classic)"
 }
 
 # ---------------------------------------------------------------------------

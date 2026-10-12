@@ -15,8 +15,14 @@ files byte-identical to the code blocks of its tutorial page.
 - `lock-ghci-exp/`: "Lock and unlock funds with the experimental
   cardano-api". The same helpers as `lock-ghci/`, rebuilt on
   Cardano.Api.Experimental.
+- `auction/`: "Run an auction on a local chain". Compiles the auction
+  validator, without its parameters, to `auction.plutus`.
+- `auction-ghci/`: the off-chain helpers of the same tutorial. They apply the
+  parameters to the validator, and run an auction from GHCi with three
+  wallets. Builds with a standard GHC 9.6.7; reads the `auction.plutus` that
+  `auction/` wrote.
 
-`add/` and `lock/` build with the uplc-ghc release named in their
+`add/`, `lock/` and `auction/` build with the uplc-ghc release named in their
 `cabal.project` (`with-compiler`). Install it with
 `ghcup install plinth <version>`. The `ghc-plinth-plutus` tag in the same
 file is the commit that this release is built from: change the two
