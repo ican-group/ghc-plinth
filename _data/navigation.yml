@@ -53,6 +53,8 @@ docs:
         url: /tutorials/lock-and-unlock-ghci/
       - title: Lock and unlock funds with the experimental cardano-api (Linux)
         url: /tutorials/lock-and-unlock-ghci-exp/
+      - title: Run an auction on a local chain (Linux)
+        url: /tutorials/auction/
 
   - title: How-to guides
     url: /how-to/

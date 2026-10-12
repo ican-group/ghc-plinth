@@ -132,3 +132,20 @@ Then refresh the package index and build:
 $ cabal update
 $ cabal build
 ```
+
+## Choose the target protocol version
+
+The ledger accepts some Plutus Core constructs only from a given major
+protocol version on. For example, a `case` on a `Data` value needs protocol
+version 12. Releases from 9.6.169.3 compile for protocol version 11, the
+version of mainnet, by default. To compile for a different chain, set the
+plugin option `target-protocol-version` in the `ghc-options` of your
+package:
+
+```haskell
+  ghc-options:
+    -fplugin-opt Plinth.Plugin:target-protocol-version=12
+```
+
+A script that you compile for a higher version than the chain fails when the
+ledger runs it.

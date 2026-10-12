@@ -17,3 +17,6 @@ who want to get started, not for looking up specific facts.
 - [Lock and unlock funds with the experimental cardano-api (Linux)]({% link tutorials/lock-and-unlock-ghci-exp.md %})
   &mdash; the same GHCi helpers, rebuilt on `Cardano.Api.Experimental`, the
   successor of the deprecated transaction-building interface.
+- [Run an auction on a local chain (Linux)]({% link tutorials/auction.md %})
+  &mdash; a contract with a state that changes many times: bids, refunds,
+  and a payout after the end time.
