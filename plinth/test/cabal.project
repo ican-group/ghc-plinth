@@ -32,6 +32,17 @@ optional-packages:
   ../../plutus/plutus-tx-plugin
   ../../plutus/plutus-metatheory
 
+-- The test-suites of plutus-tx-plugin and plutus-tx have the goldens of
+-- upstream, which compiles 'case' on Data (protocol version 12). The plugin
+-- default is the protocol version of mainnet (11), so compile these suites for
+-- version 12; BuiltinCasing.PV10 and PV11 test the lower versions. See Note
+-- [Target protocol version] in plutus:PlutusTx.Compiler.Types.
+package plutus-tx-plugin
+  ghc-options: -fplugin-opt Plinth.Plugin:target-protocol-version=12
+
+package plutus-tx
+  ghc-options: -fplugin-opt Plinth.Plugin:target-protocol-version=12
+
 source-repository-package
     type: git
     location: https://github.com/hsyl20/cardano-base
