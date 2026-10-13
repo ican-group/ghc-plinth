@@ -67,8 +67,8 @@ helpers:
 ```haskell
 -- The uplc-ghc release. The ghc-plinth-plutus tag below must be the commit
 -- that this release is built from.
-with-compiler: uplc-ghc-9.6.169.2
-with-hc-pkg:   uplc-ghc-pkg-9.6.169.2
+with-compiler: uplc-ghc-9.6.169.3
+with-hc-pkg:   uplc-ghc-pkg-9.6.169.3
 
 packages: .
 
@@ -92,7 +92,7 @@ index-state:
 source-repository-package
   type: git
   location: https://github.com/input-output-hk/ghc-plinth-plutus
-  tag: f89c66c51e7b382c6574fc7d7887de8ba8ced457
+  tag: 71bfaa5b04f2a4e17c13f35ff594782ec8891acf
   subdir: plutus-tx
           plutus-core
           plutus-ledger-api

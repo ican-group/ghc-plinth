@@ -35,8 +35,8 @@ details). Add the Plinth release channel, then install and activate the tool:
 
 ```console
 $ ghcup config add-release-channel https://raw.githubusercontent.com/input-output-hk/ghc-plinth/ghcup-channel/ghcup-plinth.yaml
-$ ghcup install plinth 9.6.169.2
-$ ghcup set plinth 9.6.169.2
+$ ghcup install plinth 9.6.169.3
+$ ghcup set plinth 9.6.169.3
 ```
 
 Check that the compiler is on `PATH`:
@@ -45,14 +45,14 @@ Check that the compiler is on `PATH`:
 $ uplc-ghc --version
 ```
 
-If you have already installed 9.6.169.2 this way, skip to step 2.
+If you have already installed 9.6.169.3 this way, skip to step 2.
 
 ## Step 2: Create the project
 
 Make a new directory and add the three files below.
 
 **`cabal.project`** wires up the build. It points cabal at `uplc-ghc`
-9.6.169.2 and its `ghc-pkg` (installed by ghcup as `uplc-ghc-pkg-9.6.169.2`,
+9.6.169.3 and its `ghc-pkg` (installed by ghcup as `uplc-ghc-pkg-9.6.169.3`,
 so that it does not collide with your regular GHC); pulls the
 Plinth libraries (`plutus-tx`, `plutus-core`) from the
 `ghc-plinth-plutus` fork the compiler was built against; uses the Cardano
@@ -63,8 +63,8 @@ crypto C libraries (`libsodium`, `secp256k1`, `blst`) from source via the
 ```haskell
 -- The uplc-ghc release. The ghc-plinth-plutus tag below must be the commit
 -- that this release is built from.
-with-compiler: uplc-ghc-9.6.169.2
-with-hc-pkg:   uplc-ghc-pkg-9.6.169.2
+with-compiler: uplc-ghc-9.6.169.3
+with-hc-pkg:   uplc-ghc-pkg-9.6.169.3
 
 packages: .
 
@@ -88,7 +88,7 @@ index-state:
 source-repository-package
   type: git
   location: https://github.com/input-output-hk/ghc-plinth-plutus
-  tag: f89c66c51e7b382c6574fc7d7887de8ba8ced457
+  tag: 71bfaa5b04f2a4e17c13f35ff594782ec8891acf
   subdir: plutus-tx
           plutus-core
 
@@ -131,7 +131,7 @@ package sodium-clib
 
 Use the `ghc-plinth-plutus` commit that matches your `uplc-ghc`: the compiler and
 these libraries are released together as a matched set, built from the same
-commit. The commit above matches release 9.6.169.2, the release in
+commit. The commit above matches release 9.6.169.3, the release in
 `with-compiler`. To use a different release, change `with-compiler`,
 `with-hc-pkg` and this `tag` together. The commit of a release is the `plutus`
 submodule of its tag (`v<version>`) in

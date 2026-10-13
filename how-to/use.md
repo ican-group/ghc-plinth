@@ -9,8 +9,8 @@ The recommended way to use the Plinth standalone compiler is to set it once in
 `uplc-ghc-<version>`. Name the release in `cabal.project`:
 
 ```haskell
-with-compiler: uplc-ghc-9.6.169.2
-with-hc-pkg:   uplc-ghc-pkg-9.6.169.2
+with-compiler: uplc-ghc-9.6.169.3
+with-hc-pkg:   uplc-ghc-pkg-9.6.169.3
 packages: .
 ```
 
@@ -65,14 +65,14 @@ is not needed: the compiler is built into `uplc-ghc`):
 source-repository-package
   type: git
   location: https://github.com/input-output-hk/ghc-plinth-plutus
-  tag: f89c66c51e7b382c6574fc7d7887de8ba8ced457
+  tag: 71bfaa5b04f2a4e17c13f35ff594782ec8891acf
   subdir: plutus-tx
           plutus-core
 ```
 
 Use the `ghc-plinth-plutus` commit that matches your `uplc-ghc`: the compiler
 and these libraries are released together as a matched set, built from the same
-commit. The commit above matches release 9.6.169.2, the release in
+commit. The commit above matches release 9.6.169.3, the release in
 `with-compiler`. To use a different release, change `with-compiler`,
 `with-hc-pkg` and this `tag` together. The commit of a release is the `plutus`
 submodule of its tag (`v<version>`) in
