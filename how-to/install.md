@@ -18,8 +18,8 @@ release channel, then install and activate the tool:
 
 ```console
 $ ghcup config add-release-channel https://raw.githubusercontent.com/input-output-hk/ghc-plinth/ghcup-channel/ghcup-plinth.yaml
-$ ghcup install plinth 9.6.169.2
-$ ghcup set plinth 9.6.169.2
+$ ghcup install plinth 9.6.169.3
+$ ghcup set plinth 9.6.169.3
 ```
 
 `ghcup install` downloads the binary distribution for your platform and
