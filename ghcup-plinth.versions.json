@@ -1103,7 +1103,292 @@
         }
       },
       "viReleaseDay": "2026-10-08"
+    },
+    "9.6.169.3": {
+      "viArch": {
+        "A_ARM64": {
+          "Linux_Alpine": {
+            "unknown_versioning": {
+              "dlUri": "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.3/ghc-9.6.169.3-aarch64-alpine-linux-musl.tar.xz",
+              "dlHash": "ed07c0d134b4cb90c653978eeb3955c86793d43bf7fcde1c57d0691346a84fe5",
+              "dlSubdir": "ghc-9.6.169.3-aarch64-alpine-linux-musl",
+              "dlInstallSpec": {
+                "exeRules": [],
+                "dataRules": [],
+                "configure": {
+                  "configFile": "configure",
+                  "configArgs": [
+                    "--prefix=${PREFIX}",
+                    "--disable-ld-override"
+                  ]
+                },
+                "make": {
+                  "makeArgs": [
+                    "install"
+                  ],
+                  "makeEnv": {
+                    "env": [
+                      [
+                        "DESTDIR",
+                        "${TMPDIR}"
+                      ]
+                    ],
+                    "union": "PreferSpec"
+                  }
+                },
+                "exeSymLinked": [
+                  {
+                    "target": "bin/uplc-ghc",
+                    "linkName": "uplc-ghc-${PKGVER}",
+                    "pVPMajorLinks": true,
+                    "setName": "uplc-ghc"
+                  },
+                  {
+                    "target": "bin/ghc-pkg",
+                    "linkName": "uplc-ghc-pkg-${PKGVER}",
+                    "pVPMajorLinks": true,
+                    "setName": "uplc-ghc-pkg"
+                  }
+                ],
+                "preserveMtimes": true
+              }
+            }
+          },
+          "Darwin": {
+            "unknown_versioning": {
+              "dlUri": "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.3/ghc-9.6.169.3-aarch64-apple-darwin.tar.xz",
+              "dlHash": "3f70223e54ccb7cf8edf9d183735ec9c1703bc3d258a44d84604f2b3aeaaff24",
+              "dlSubdir": "ghc-9.6.169.3-aarch64-apple-darwin",
+              "dlInstallSpec": {
+                "exeRules": [],
+                "dataRules": [],
+                "configure": {
+                  "configFile": "configure",
+                  "configArgs": [
+                    "--prefix=${PREFIX}",
+                    "--disable-ld-override"
+                  ]
+                },
+                "make": {
+                  "makeArgs": [
+                    "install"
+                  ],
+                  "makeEnv": {
+                    "env": [
+                      [
+                        "DESTDIR",
+                        "${TMPDIR}"
+                      ]
+                    ],
+                    "union": "PreferSpec"
+                  }
+                },
+                "exeSymLinked": [
+                  {
+                    "target": "bin/uplc-ghc",
+                    "linkName": "uplc-ghc-${PKGVER}",
+                    "pVPMajorLinks": true,
+                    "setName": "uplc-ghc"
+                  },
+                  {
+                    "target": "bin/ghc-pkg",
+                    "linkName": "uplc-ghc-pkg-${PKGVER}",
+                    "pVPMajorLinks": true,
+                    "setName": "uplc-ghc-pkg"
+                  }
+                ],
+                "preserveMtimes": true
+              }
+            }
+          },
+          "Linux_UnknownLinux": {
+            "unknown_versioning": {
+              "dlUri": "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.3/ghc-9.6.169.3-aarch64-unknown-linux.tar.xz",
+              "dlHash": "f4338c3092fcf9c9739dedb259425150a0a330aa98468d7e3c2971acd82a7ef2",
+              "dlSubdir": "ghc-9.6.169.3-aarch64-unknown-linux",
+              "dlInstallSpec": {
+                "exeRules": [],
+                "dataRules": [],
+                "configure": {
+                  "configFile": "configure",
+                  "configArgs": [
+                    "--prefix=${PREFIX}",
+                    "--disable-ld-override"
+                  ]
+                },
+                "make": {
+                  "makeArgs": [
+                    "install"
+                  ],
+                  "makeEnv": {
+                    "env": [
+                      [
+                        "DESTDIR",
+                        "${TMPDIR}"
+                      ]
+                    ],
+                    "union": "PreferSpec"
+                  }
+                },
+                "exeSymLinked": [
+                  {
+                    "target": "bin/uplc-ghc",
+                    "linkName": "uplc-ghc-${PKGVER}",
+                    "pVPMajorLinks": true,
+                    "setName": "uplc-ghc"
+                  },
+                  {
+                    "target": "bin/ghc-pkg",
+                    "linkName": "uplc-ghc-pkg-${PKGVER}",
+                    "pVPMajorLinks": true,
+                    "setName": "uplc-ghc-pkg"
+                  }
+                ],
+                "preserveMtimes": true
+              }
+            }
+          }
+        },
+        "A_64": {
+          "Linux_Alpine": {
+            "unknown_versioning": {
+              "dlUri": "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.3/ghc-9.6.169.3-x86_64-unknown-linux-musl.tar.xz",
+              "dlHash": "bd428fa9addbbe2eff986e6501863483e6e4d20f073297705bb1e57532e24aa0",
+              "dlSubdir": "ghc-9.6.169.3-x86_64-unknown-linux-musl",
+              "dlInstallSpec": {
+                "exeRules": [],
+                "dataRules": [],
+                "configure": {
+                  "configFile": "configure",
+                  "configArgs": [
+                    "--prefix=${PREFIX}",
+                    "--disable-ld-override"
+                  ]
+                },
+                "make": {
+                  "makeArgs": [
+                    "install"
+                  ],
+                  "makeEnv": {
+                    "env": [
+                      [
+                        "DESTDIR",
+                        "${TMPDIR}"
+                      ]
+                    ],
+                    "union": "PreferSpec"
+                  }
+                },
+                "exeSymLinked": [
+                  {
+                    "target": "bin/uplc-ghc",
+                    "linkName": "uplc-ghc-${PKGVER}",
+                    "pVPMajorLinks": true,
+                    "setName": "uplc-ghc"
+                  },
+                  {
+                    "target": "bin/ghc-pkg",
+                    "linkName": "uplc-ghc-pkg-${PKGVER}",
+                    "pVPMajorLinks": true,
+                    "setName": "uplc-ghc-pkg"
+                  }
+                ],
+                "preserveMtimes": true
+              }
+            }
+          },
+          "Linux_UnknownLinux": {
+            "unknown_versioning": {
+              "dlUri": "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.3/ghc-9.6.169.3-x86_64-unknown-linux.tar.xz",
+              "dlHash": "6ee9780e08e8242ccb2ead9b28a148711fead84dc10db4ea605f717fa96fb580",
+              "dlSubdir": "ghc-9.6.169.3-x86_64-unknown-linux",
+              "dlInstallSpec": {
+                "exeRules": [],
+                "dataRules": [],
+                "configure": {
+                  "configFile": "configure",
+                  "configArgs": [
+                    "--prefix=${PREFIX}",
+                    "--disable-ld-override"
+                  ]
+                },
+                "make": {
+                  "makeArgs": [
+                    "install"
+                  ],
+                  "makeEnv": {
+                    "env": [
+                      [
+                        "DESTDIR",
+                        "${TMPDIR}"
+                      ]
+                    ],
+                    "union": "PreferSpec"
+                  }
+                },
+                "exeSymLinked": [
+                  {
+                    "target": "bin/uplc-ghc",
+                    "linkName": "uplc-ghc-${PKGVER}",
+                    "pVPMajorLinks": true,
+                    "setName": "uplc-ghc"
+                  },
+                  {
+                    "target": "bin/ghc-pkg",
+                    "linkName": "uplc-ghc-pkg-${PKGVER}",
+                    "pVPMajorLinks": true,
+                    "setName": "uplc-ghc-pkg"
+                  }
+                ],
+                "preserveMtimes": true
+              }
+            }
+          },
+          "Windows": {
+            "unknown_versioning": {
+              "dlUri": "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.3/ghc-9.6.169.3-x86_64-unknown-mingw32.tar.xz",
+              "dlHash": "206b743899bfc215c8a18badd8fb2f6ab7169646d66bcffded1070aaebb8e983",
+              "dlSubdir": "ghc-9.6.169.3-x86_64-unknown-mingw32",
+              "dlInstallSpec": {
+                "exeRules": [
+                  {
+                    "installPattern": [
+                      "bin/**"
+                    ]
+                  }
+                ],
+                "dataRules": [
+                  {
+                    "installPattern": [
+                      "doc/**",
+                      "lib/**",
+                      "man/**",
+                      "mingw/**"
+                    ]
+                  }
+                ],
+                "exeSymLinked": [
+                  {
+                    "target": "bin/uplc-ghc.exe",
+                    "linkName": "uplc-ghc-${PKGVER}.exe",
+                    "pVPMajorLinks": true,
+                    "setName": "uplc-ghc.exe"
+                  },
+                  {
+                    "target": "bin/ghc-pkg.exe",
+                    "linkName": "uplc-ghc-pkg-${PKGVER}.exe",
+                    "pVPMajorLinks": true,
+                    "setName": "uplc-ghc-pkg.exe"
+                  }
+                ],
+                "preserveMtimes": true
+              }
+            }
+          }
+        }
+      },
+      "viReleaseDay": "2026-10-13"
     }
   },
-  "latest": "9.6.169.2"
+  "latest": "9.6.169.3"
 }
