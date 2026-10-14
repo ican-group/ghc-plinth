@@ -149,3 +149,5 @@ package:
 
 A script that you compile for a higher version than the chain fails when the
 ledger runs it.
+Releases 9.6.169.1 and 9.6.169.2 compile for protocol version 12, so their
+scripts that decode data types fail on mainnet. Use 9.6.169.3 or later.
