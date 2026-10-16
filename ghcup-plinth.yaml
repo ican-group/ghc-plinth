@@ -2,8 +2,8 @@
 ghcupDownloads:
   plinth:
     toolDetails:
-      toolHomepage: "https://github.com/input-output-hk/ghc-plinth"
-      toolRepository: "https://github.com/input-output-hk/ghc-plinth"
+      toolHomepage: "https://github.com/ican-group/ghc-plinth"
+      toolRepository: "https://github.com/ican-group/ghc-plinth"
       toolDescription: "GHC fork that compiles Haskell directly to Plutus Core (uplc-ghc)"
       toolAuthor: IOG
       toolLicense: BSD-3-Clause
@@ -15,7 +15,7 @@ ghcupDownloads:
           A_ARM64:
             Linux_Alpine:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.166.1/ghc-9.6.166.1-aarch64-alpine-linux-musl.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.166.1/ghc-9.6.166.1-aarch64-alpine-linux-musl.tar.xz"
                 dlHash: 2a2a5e7f81b38a39fa3cc37674416d401df92ae4c7f4db0309eb67c7f6b7e376
                 dlSubdir: ghc-9.6.166.1-aarch64-alpine-linux-musl
                 dlInstallSpec:
@@ -43,7 +43,7 @@ ghcupDownloads:
                   preserveMtimes: true
             Darwin:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.166.1/ghc-9.6.166.1-aarch64-apple-darwin.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.166.1/ghc-9.6.166.1-aarch64-apple-darwin.tar.xz"
                 dlHash: 68328d8ce5bcd1c9b951925f04d4cad6615f65051fcbeee2743261f80f5587ae
                 dlSubdir: ghc-9.6.166.1-aarch64-apple-darwin
                 dlInstallSpec:
@@ -71,7 +71,7 @@ ghcupDownloads:
                   preserveMtimes: true
             Linux_UnknownLinux:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.166.1/ghc-9.6.166.1-aarch64-unknown-linux.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.166.1/ghc-9.6.166.1-aarch64-unknown-linux.tar.xz"
                 dlHash: f64ab90b1ac5316ae3bb6f2d24b5ec85ae94ae0610b574509d9b13d4a6dd716f
                 dlSubdir: ghc-9.6.166.1-aarch64-unknown-linux
                 dlInstallSpec:
@@ -100,7 +100,7 @@ ghcupDownloads:
           A_64:
             Linux_Alpine:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.166.1/ghc-9.6.166.1-x86_64-unknown-linux-musl.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.166.1/ghc-9.6.166.1-x86_64-unknown-linux-musl.tar.xz"
                 dlHash: 1f5b921b054d356df5cdd893218c9eb771eb7876eec83b922a976d1beebd7402
                 dlSubdir: ghc-9.6.166.1-x86_64-unknown-linux-musl
                 dlInstallSpec:
@@ -128,7 +128,7 @@ ghcupDownloads:
                   preserveMtimes: true
             Linux_UnknownLinux:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.166.1/ghc-9.6.166.1-x86_64-unknown-linux.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.166.1/ghc-9.6.166.1-x86_64-unknown-linux.tar.xz"
                 dlHash: 4af832424c560f766eb7e0c56026bad711a72f08b6e10036676a6892aa958496
                 dlSubdir: ghc-9.6.166.1-x86_64-unknown-linux
                 dlInstallSpec:
@@ -156,7 +156,7 @@ ghcupDownloads:
                   preserveMtimes: true
             Windows:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.166.1/ghc-9.6.166.1-x86_64-unknown-mingw32.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.166.1/ghc-9.6.166.1-x86_64-unknown-mingw32.tar.xz"
                 dlHash: 4c12923bda1ee048995a75e4fbacfda98be1cc02107362753a8abce4a6d89800
                 dlSubdir: ghc-9.6.166.1-x86_64-unknown-mingw32
                 dlInstallSpec:
@@ -182,7 +182,7 @@ ghcupDownloads:
           A_ARM64:
             Linux_Alpine:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.166.2/ghc-9.6.166.2-aarch64-alpine-linux-musl.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.166.2/ghc-9.6.166.2-aarch64-alpine-linux-musl.tar.xz"
                 dlHash: cd70b68e0107b8214a79dfa3a1ba46da4d562270b6bc935f748fccd9f0167e66
                 dlSubdir: ghc-9.6.166.2-aarch64-alpine-linux-musl
                 dlInstallSpec:
@@ -214,7 +214,7 @@ ghcupDownloads:
                   preserveMtimes: true
             Darwin:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.166.2/ghc-9.6.166.2-aarch64-apple-darwin.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.166.2/ghc-9.6.166.2-aarch64-apple-darwin.tar.xz"
                 dlHash: 40c41fee498e53bdfeb3ec059df5bcb4e98266cc1905332a425f9c136364a9eb
                 dlSubdir: ghc-9.6.166.2-aarch64-apple-darwin
                 dlInstallSpec:
@@ -246,7 +246,7 @@ ghcupDownloads:
                   preserveMtimes: true
             Linux_UnknownLinux:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.166.2/ghc-9.6.166.2-aarch64-unknown-linux.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.166.2/ghc-9.6.166.2-aarch64-unknown-linux.tar.xz"
                 dlHash: ae076c6c2322b9f6b0cfb733074865defe8545133b0e6b7b65220610dd3ec942
                 dlSubdir: ghc-9.6.166.2-aarch64-unknown-linux
                 dlInstallSpec:
@@ -279,7 +279,7 @@ ghcupDownloads:
           A_64:
             Linux_Alpine:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.166.2/ghc-9.6.166.2-x86_64-unknown-linux-musl.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.166.2/ghc-9.6.166.2-x86_64-unknown-linux-musl.tar.xz"
                 dlHash: 4f2b14876496069d299c7238bd5eb06f72c273122f7ea77708b5132bea155093
                 dlSubdir: ghc-9.6.166.2-x86_64-unknown-linux-musl
                 dlInstallSpec:
@@ -311,7 +311,7 @@ ghcupDownloads:
                   preserveMtimes: true
             Linux_UnknownLinux:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.166.2/ghc-9.6.166.2-x86_64-unknown-linux.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.166.2/ghc-9.6.166.2-x86_64-unknown-linux.tar.xz"
                 dlHash: 7756778e22ba414be84c6e73a63e6b35aa2312bf81555e3baae1b7c14d2a3725
                 dlSubdir: ghc-9.6.166.2-x86_64-unknown-linux
                 dlInstallSpec:
@@ -343,7 +343,7 @@ ghcupDownloads:
                   preserveMtimes: true
             Windows:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.166.2/ghc-9.6.166.2-x86_64-unknown-mingw32.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.166.2/ghc-9.6.166.2-x86_64-unknown-mingw32.tar.xz"
                 dlHash: 19f3a52a2ecb835d5aac697e5bfa27f55e5a2a2c47268d73cbf764b2286c16b0
                 dlSubdir: ghc-9.6.166.2-x86_64-unknown-mingw32
                 dlInstallSpec:
@@ -373,7 +373,7 @@ ghcupDownloads:
           A_ARM64:
             Linux_Alpine:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.1/ghc-9.6.169.1-aarch64-alpine-linux-musl.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.169.1/ghc-9.6.169.1-aarch64-alpine-linux-musl.tar.xz"
                 dlHash: f775096679ec72808e7433fe29869820ad5d4d4f3988f359366b0f4ded54db13
                 dlSubdir: ghc-9.6.169.1-aarch64-alpine-linux-musl
                 dlInstallSpec:
@@ -405,7 +405,7 @@ ghcupDownloads:
                   preserveMtimes: true
             Darwin:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.1/ghc-9.6.169.1-aarch64-apple-darwin.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.169.1/ghc-9.6.169.1-aarch64-apple-darwin.tar.xz"
                 dlHash: 0a14de60e4274fd2fa6d81807804f0ce081653db3039fe08af9093deb12979b9
                 dlSubdir: ghc-9.6.169.1-aarch64-apple-darwin
                 dlInstallSpec:
@@ -437,7 +437,7 @@ ghcupDownloads:
                   preserveMtimes: true
             Linux_UnknownLinux:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.1/ghc-9.6.169.1-aarch64-unknown-linux.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.169.1/ghc-9.6.169.1-aarch64-unknown-linux.tar.xz"
                 dlHash: 5baa36546906baa191de17929765440b1a16beace2a530c3d949bfdd900c3c37
                 dlSubdir: ghc-9.6.169.1-aarch64-unknown-linux
                 dlInstallSpec:
@@ -470,7 +470,7 @@ ghcupDownloads:
           A_64:
             Linux_Alpine:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.1/ghc-9.6.169.1-x86_64-unknown-linux-musl.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.169.1/ghc-9.6.169.1-x86_64-unknown-linux-musl.tar.xz"
                 dlHash: 92e394c32ce1ff9a406fd549d3f298ba1486994cfb1d1fb42b7730c443c8fbc5
                 dlSubdir: ghc-9.6.169.1-x86_64-unknown-linux-musl
                 dlInstallSpec:
@@ -502,7 +502,7 @@ ghcupDownloads:
                   preserveMtimes: true
             Linux_UnknownLinux:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.1/ghc-9.6.169.1-x86_64-unknown-linux.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.169.1/ghc-9.6.169.1-x86_64-unknown-linux.tar.xz"
                 dlHash: 3471bf972efb8d434e9ada13ec39244aea002fd0e75981067bdd2a7ea9c12d32
                 dlSubdir: ghc-9.6.169.1-x86_64-unknown-linux
                 dlInstallSpec:
@@ -534,7 +534,7 @@ ghcupDownloads:
                   preserveMtimes: true
             Windows:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.1/ghc-9.6.169.1-x86_64-unknown-mingw32.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.169.1/ghc-9.6.169.1-x86_64-unknown-mingw32.tar.xz"
                 dlHash: e456331ae620c87d2594bdb22aa097b21dfe89aab8a41fc4153b816c6884c5ea
                 dlSubdir: ghc-9.6.169.1-x86_64-unknown-mingw32
                 dlInstallSpec:
@@ -564,7 +564,7 @@ ghcupDownloads:
           A_ARM64:
             Linux_Alpine:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.2/ghc-9.6.169.2-aarch64-alpine-linux-musl.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.169.2/ghc-9.6.169.2-aarch64-alpine-linux-musl.tar.xz"
                 dlHash: 545f5ce683b76346187d23113dd8c65e75d77d7c9e5ca796c03f63ec6d43c8f2
                 dlSubdir: ghc-9.6.169.2-aarch64-alpine-linux-musl
                 dlInstallSpec:
@@ -596,7 +596,7 @@ ghcupDownloads:
                   preserveMtimes: true
             Darwin:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.2/ghc-9.6.169.2-aarch64-apple-darwin.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.169.2/ghc-9.6.169.2-aarch64-apple-darwin.tar.xz"
                 dlHash: 1653a2a5365b393142581f0b97f65a58fa2fdefc9ef6dc60906edc2b4e634366
                 dlSubdir: ghc-9.6.169.2-aarch64-apple-darwin
                 dlInstallSpec:
@@ -628,7 +628,7 @@ ghcupDownloads:
                   preserveMtimes: true
             Linux_UnknownLinux:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.2/ghc-9.6.169.2-aarch64-unknown-linux.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.169.2/ghc-9.6.169.2-aarch64-unknown-linux.tar.xz"
                 dlHash: 12ccc1919a83f66dc01d2a57e661c3969c36a35a6964eb26d57c64c52c012952
                 dlSubdir: ghc-9.6.169.2-aarch64-unknown-linux
                 dlInstallSpec:
@@ -661,7 +661,7 @@ ghcupDownloads:
           A_64:
             Linux_Alpine:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.2/ghc-9.6.169.2-x86_64-unknown-linux-musl.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.169.2/ghc-9.6.169.2-x86_64-unknown-linux-musl.tar.xz"
                 dlHash: 03db4815a66adbf0aaba8e6e550e7841f23a6aaa0d6f42bd12551a1a6c0b24b5
                 dlSubdir: ghc-9.6.169.2-x86_64-unknown-linux-musl
                 dlInstallSpec:
@@ -693,7 +693,7 @@ ghcupDownloads:
                   preserveMtimes: true
             Linux_UnknownLinux:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.2/ghc-9.6.169.2-x86_64-unknown-linux.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.169.2/ghc-9.6.169.2-x86_64-unknown-linux.tar.xz"
                 dlHash: b2c710fe9ce9bc2b8f9558674c0e7ae6cce108d3915fbff7b38eaee289d2027e
                 dlSubdir: ghc-9.6.169.2-x86_64-unknown-linux
                 dlInstallSpec:
@@ -725,7 +725,7 @@ ghcupDownloads:
                   preserveMtimes: true
             Windows:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.2/ghc-9.6.169.2-x86_64-unknown-mingw32.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.169.2/ghc-9.6.169.2-x86_64-unknown-mingw32.tar.xz"
                 dlHash: b622d652169bc91f1b8e2c214e14fde742f9f617bf1fcf035174d63282fcf7df
                 dlSubdir: ghc-9.6.169.2-x86_64-unknown-mingw32
                 dlInstallSpec:
@@ -757,7 +757,7 @@ ghcupDownloads:
           A_ARM64:
             Linux_Alpine:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.3/ghc-9.6.169.3-aarch64-alpine-linux-musl.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.169.3/ghc-9.6.169.3-aarch64-alpine-linux-musl.tar.xz"
                 dlHash: ed07c0d134b4cb90c653978eeb3955c86793d43bf7fcde1c57d0691346a84fe5
                 dlSubdir: ghc-9.6.169.3-aarch64-alpine-linux-musl
                 dlInstallSpec:
@@ -789,7 +789,7 @@ ghcupDownloads:
                   preserveMtimes: true
             Darwin:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.3/ghc-9.6.169.3-aarch64-apple-darwin.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.169.3/ghc-9.6.169.3-aarch64-apple-darwin.tar.xz"
                 dlHash: 3f70223e54ccb7cf8edf9d183735ec9c1703bc3d258a44d84604f2b3aeaaff24
                 dlSubdir: ghc-9.6.169.3-aarch64-apple-darwin
                 dlInstallSpec:
@@ -821,7 +821,7 @@ ghcupDownloads:
                   preserveMtimes: true
             Linux_UnknownLinux:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.3/ghc-9.6.169.3-aarch64-unknown-linux.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.169.3/ghc-9.6.169.3-aarch64-unknown-linux.tar.xz"
                 dlHash: f4338c3092fcf9c9739dedb259425150a0a330aa98468d7e3c2971acd82a7ef2
                 dlSubdir: ghc-9.6.169.3-aarch64-unknown-linux
                 dlInstallSpec:
@@ -854,7 +854,7 @@ ghcupDownloads:
           A_64:
             Linux_Alpine:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.3/ghc-9.6.169.3-x86_64-unknown-linux-musl.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.169.3/ghc-9.6.169.3-x86_64-unknown-linux-musl.tar.xz"
                 dlHash: bd428fa9addbbe2eff986e6501863483e6e4d20f073297705bb1e57532e24aa0
                 dlSubdir: ghc-9.6.169.3-x86_64-unknown-linux-musl
                 dlInstallSpec:
@@ -886,7 +886,7 @@ ghcupDownloads:
                   preserveMtimes: true
             Linux_UnknownLinux:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.3/ghc-9.6.169.3-x86_64-unknown-linux.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.169.3/ghc-9.6.169.3-x86_64-unknown-linux.tar.xz"
                 dlHash: 6ee9780e08e8242ccb2ead9b28a148711fead84dc10db4ea605f717fa96fb580
                 dlSubdir: ghc-9.6.169.3-x86_64-unknown-linux
                 dlInstallSpec:
@@ -918,7 +918,7 @@ ghcupDownloads:
                   preserveMtimes: true
             Windows:
               unknown_versioning:
-                dlUri: "https://github.com/input-output-hk/ghc-plinth/releases/download/v9.6.169.3/ghc-9.6.169.3-x86_64-unknown-mingw32.tar.xz"
+                dlUri: "https://github.com/ican-group/ghc-plinth/releases/download/v9.6.169.3/ghc-9.6.169.3-x86_64-unknown-mingw32.tar.xz"
                 dlHash: 206b743899bfc215c8a18badd8fb2f6ab7169646d66bcffded1070aaebb8e983
                 dlSubdir: ghc-9.6.169.3-x86_64-unknown-mingw32
                 dlInstallSpec:
