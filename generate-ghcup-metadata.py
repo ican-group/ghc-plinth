@@ -14,7 +14,7 @@ See Note [Ghcup channel metadata] below for the schema rationale.
 Usage:
     generate-ghcup-metadata.py \
         --version 9.6.7-plinth1.66 \
-        --base-url https://github.com/input-output-hk/ghc-plinth/releases/download/v1.66 \
+        --base-url https://github.com/ican-group/ghc-plinth/releases/download/v1.66 \
         [--db ghcup-plinth.versions.json] \
         [--output ghcup-plinth.yaml] \
         [--release-day 2026-07-29] [--changelog <url>] \
@@ -51,8 +51,8 @@ import sys
 TOOL_NAME = "plinth"
 
 TOOL_DETAILS = {
-    "toolHomepage": "https://github.com/input-output-hk/ghc-plinth",
-    "toolRepository": "https://github.com/input-output-hk/ghc-plinth",
+    "toolHomepage": "https://github.com/ican-group/ghc-plinth",
+    "toolRepository": "https://github.com/ican-group/ghc-plinth",
     "toolDescription": "GHC fork that compiles Haskell directly to Plutus Core (uplc-ghc)",
     "toolAuthor": "IOG",
     "toolLicense": "BSD-3-Clause",

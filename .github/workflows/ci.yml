@@ -847,7 +847,7 @@ jobs:
   # uplc-ghc is distributed as a custom third-party ghcup tool named `plinth`,
   # installable with a stock ghcup >= 0.2.1.0 (installer DSL). Users then run:
   #   ghcup config add-release-channel \
-  #     https://raw.githubusercontent.com/input-output-hk/ghc-plinth/ghcup-channel/ghcup-plinth.yaml
+  #     https://raw.githubusercontent.com/ican-group/ghc-plinth/ghcup-channel/ghcup-plinth.yaml
   #   ghcup install plinth <version>
   #
   # The channel lives on its own orphan branch, served straight from

@@ -13,7 +13,7 @@ Documentation
 
 The documentation lives on the documentation site:
 
-  **<https://input-output-hk.github.io/ghc-plinth/>**
+  **<https://ican-group.github.io/ghc-plinth/>**
 
 It covers the installation of `uplc-ghc` (via ghcup), its use in a project,
 the build from source, the tests, and background on how the compiler works.
