@@ -91,7 +91,7 @@ index-state:
 -- compiler itself is built into uplc-ghc, so plutus-tx-plugin is not needed.
 source-repository-package
   type: git
-  location: https://github.com/input-output-hk/ghc-plinth-plutus
+  location: https://github.com/ican-group/ghc-plinth-plutus
   tag: 71bfaa5b04f2a4e17c13f35ff594782ec8891acf
   subdir: plutus-tx
           plutus-core
@@ -99,7 +99,7 @@ source-repository-package
 
 source-repository-package
   type: git
-  location: https://github.com/hsyl20/cardano-base
+  location: https://github.com/ican-group/cardano-base
   tag: 055ebbcc73e1cb234f1fd3fa237a4fb087130183
   subdir: cardano-crypto-class
           cardano-crypto-praos

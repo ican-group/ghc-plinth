@@ -64,7 +64,7 @@ is not needed: the compiler is built into `uplc-ghc`):
 ```haskell
 source-repository-package
   type: git
-  location: https://github.com/input-output-hk/ghc-plinth-plutus
+  location: https://github.com/ican-group/ghc-plinth-plutus
   tag: 71bfaa5b04f2a4e17c13f35ff594782ec8891acf
   subdir: plutus-tx
           plutus-core
@@ -76,7 +76,7 @@ commit. The commit above matches release 9.6.169.3, the release in
 `with-compiler`. To use a different release, change `with-compiler`,
 `with-hc-pkg` and this `tag` together. The commit of a release is the `plutus`
 submodule of its tag (`v<version>`) in
-[ghc-plinth](https://github.com/input-output-hk/ghc-plinth).
+[ghc-plinth](https://github.com/ican-group/ghc-plinth).
 
 In addition you may want to add the following `source-repository-package` blocks
 that build the C crypto libraries used by Cardano (`libsodium`, `secp256k1`,
@@ -91,7 +91,7 @@ handle real funds.
 ```haskell
 source-repository-package
   type: git
-  location: https://github.com/hsyl20/cardano-base
+  location: https://github.com/ican-group/cardano-base
   tag: 055ebbcc73e1cb234f1fd3fa237a4fb087130183
   subdir: cardano-crypto-class
           cardano-crypto-praos

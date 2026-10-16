@@ -33,7 +33,7 @@ The `plutus` submodule provides `plutus-tx`, `plutus-tx-plugin`, and
 `plutus-core`, so clone recursively:
 
 ```console
-$ git clone --recurse-submodules git@github.com:input-output-hk/ghc-plinth.git
+$ git clone --recurse-submodules git@github.com:ican-group/ghc-plinth.git
 ```
 
 If you already cloned without `--recurse-submodules`, fetch them with:

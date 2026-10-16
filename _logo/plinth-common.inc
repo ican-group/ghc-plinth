@@ -3,7 +3,7 @@
 //
 // Included by plinth-logo.pov (the wordmark) and plinth-icon.pov (the favicon)
 // so the two cannot drift apart. Palette taken from the project site,
-// input-output-hk.github.io/ghc-plinth.
+// ican-group.github.io/ghc-plinth.
 //
 // Options, set with Declare= on the command line before the include runs:
 //   Motif   1 = the I of the wordmark is a plinth in miniature, 0 = plain I

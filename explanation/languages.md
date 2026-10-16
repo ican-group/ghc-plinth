@@ -127,4 +127,4 @@ the choice is about the path to that target, not the target itself.
 [helios]: https://helios-lang.io/
 [marlowe]: https://marlowe.iohk.io/
 [devportal]: https://developers.cardano.org/docs/smart-contracts/
-[issues]: https://github.com/input-output-hk/ghc-plinth/issues
+[issues]: https://github.com/ican-group/ghc-plinth/issues

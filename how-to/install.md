@@ -17,7 +17,7 @@ You need ghcup 0.2.1.0 or newer (check with `ghcup --version`). Add the Plinth
 release channel, then install and activate the tool:
 
 ```console
-$ ghcup config add-release-channel https://raw.githubusercontent.com/input-output-hk/ghc-plinth/ghcup-channel/ghcup-plinth.yaml
+$ ghcup config add-release-channel https://raw.githubusercontent.com/ican-group/ghc-plinth/ghcup-channel/ghcup-plinth.yaml
 $ ghcup install plinth 9.6.169.3
 $ ghcup set plinth 9.6.169.3
 ```

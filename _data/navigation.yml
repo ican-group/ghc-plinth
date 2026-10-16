@@ -9,7 +9,7 @@ header:
   - title: Reference
     url: /reference/
   - title: GitHub
-    url: https://github.com/input-output-hk/ghc-plinth
+    url: https://github.com/ican-group/ghc-plinth
 
 # Left sidebar shown on every docs page (referenced as `sidebar: nav: docs`)
 docs:

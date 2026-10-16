@@ -65,7 +65,7 @@ The rest of the tutorial assumes the compiler is available as plain
 details). Add the Plinth release channel, then install and activate the tool:
 
 ```console
-> ghcup config add-release-channel https://raw.githubusercontent.com/input-output-hk/ghc-plinth/ghcup-channel/ghcup-plinth.yaml
+> ghcup config add-release-channel https://raw.githubusercontent.com/ican-group/ghc-plinth/ghcup-channel/ghcup-plinth.yaml
 > ghcup install plinth 9.6.169.3
 > ghcup set plinth 9.6.169.3
 ```
@@ -123,14 +123,14 @@ index-state:
 -- compiler itself is built into uplc-ghc, so plutus-tx-plugin is not needed.
 source-repository-package
   type: git
-  location: https://github.com/input-output-hk/ghc-plinth-plutus
+  location: https://github.com/ican-group/ghc-plinth-plutus
   tag: 71bfaa5b04f2a4e17c13f35ff594782ec8891acf
   subdir: plutus-tx
           plutus-core
 
 source-repository-package
   type: git
-  location: https://github.com/hsyl20/cardano-base
+  location: https://github.com/ican-group/cardano-base
   tag: 055ebbcc73e1cb234f1fd3fa237a4fb087130183
   subdir: cardano-crypto-class
           cardano-crypto-praos
@@ -171,7 +171,7 @@ commit. The commit above matches release 9.6.169.3, the release in
 `with-compiler`. To use a different release, change `with-compiler`,
 `with-hc-pkg` and this `tag` together. The commit of a release is the `plutus`
 submodule of its tag (`v<version>`) in
-[ghc-plinth](https://github.com/input-output-hk/ghc-plinth).
+[ghc-plinth](https://github.com/ican-group/ghc-plinth).
 
 **Not for production.** The vendored crypto C libraries pulled in by the
 `*-clib` `source-repository-package`s above have not been audited. Use this
