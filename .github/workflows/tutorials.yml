@@ -57,7 +57,7 @@ jobs:
       run: |
         set -eu
         VERSION=$(examples/test-tutorials.sh version)
-        ghcup config add-release-channel https://raw.githubusercontent.com/input-output-hk/ghc-plinth/ghcup-channel/ghcup-plinth.yaml
+        ghcup config add-release-channel https://raw.githubusercontent.com/ican-group/ghc-plinth/ghcup-channel/ghcup-plinth.yaml
         ghcup install plinth "$VERSION"
         ghcup set plinth "$VERSION"
         "uplc-ghc-$VERSION" --version
@@ -137,7 +137,7 @@ jobs:
         GHCUP="$HOME/.local/bin/ghcup.exe"
         curl -fsSL "https://downloads.haskell.org/~ghcup/x86_64-mingw64-ghcup.exe" -o "$GHCUP"
         "$GHCUP" --version
-        "$GHCUP" config add-release-channel https://raw.githubusercontent.com/input-output-hk/ghc-plinth/ghcup-channel/ghcup-plinth.yaml
+        "$GHCUP" config add-release-channel https://raw.githubusercontent.com/ican-group/ghc-plinth/ghcup-channel/ghcup-plinth.yaml
         "$GHCUP" install plinth "$VERSION"
         "$GHCUP" set plinth "$VERSION"
         BINDIR=$("$GHCUP" whereis bindir)

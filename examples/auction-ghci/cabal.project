@@ -23,7 +23,7 @@ index-state:
 -- needs.
 source-repository-package
   type: git
-  location: https://github.com/hsyl20/cardano-base
+  location: https://github.com/ican-group/cardano-base
   tag: 205c260ed99566d2d2ae956622818a90817fadd9
   subdir: cardano-crypto-class
           cardano-crypto-praos

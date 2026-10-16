@@ -1,7 +1,7 @@
 # Example projects
 
 Working copies of the projects built in the website tutorials
-(https://input-output-hk.github.io/ghc-plinth/tutorials/). Keep each project's
+(https://ican-group.github.io/ghc-plinth/tutorials/). Keep each project's
 files byte-identical to the code blocks of its tutorial page.
 
 - `add/`: "Your first smart contract with Plinth". Compiles an addition
