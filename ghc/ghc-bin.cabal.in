@@ -27,8 +27,8 @@ Flag threaded
     Default: True
     Manual: True
 
-Flag plinth
-    Description: Build with the Plinth backend
+Flag kardan
+    Description: Build Kardan (with the static Plinth plugin)
     Default: False
     Manual: True
 
@@ -90,8 +90,8 @@ Executable ghc
     if flag(threaded)
       ghc-options: -threaded
 
-    if flag(plinth)
-      cpp-options: -DPLINTH
+    if flag(kardan)
+      cpp-options: -DKARDAN
       build-depends: plutus-tx-plugin
 
     Other-Extensions:

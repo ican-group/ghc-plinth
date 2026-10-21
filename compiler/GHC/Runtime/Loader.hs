@@ -163,7 +163,7 @@ loadPlugins hsc_env
 
 -- Note [Static plugins shadow -fplugin]
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
--- A host program (e.g. uplc-ghc / Plinth) can compile a plugin into the
+-- A host program (e.g. kardan / Plinth) can compile a plugin into the
 -- GHC executable itself by registering it as a 'StaticPlugin'. Source
 -- modules that request the plugin with -fplugin=M should then NOT
 -- trigger a dynamic load of module M -- the static plugin already

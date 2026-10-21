@@ -1785,7 +1785,7 @@ setInteractivePrint f d = d { interactivePrint = Just f}
 
 -- Note [Keep interface pragmas]
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
--- The Plinth compiler (uplc-ghc) does whole-program compilation: it
+-- The Plinth compiler (kardan) does whole-program compilation: it
 -- translates the unfoldings of all the imported definitions that the
 -- compiled code uses. Thus it needs the unfoldings in the interface
 -- files. Two flags remove them:
@@ -1797,7 +1797,7 @@ setInteractivePrint f d = d { interactivePrint = Just f}
 --
 -- With Opt_KeepInterfacePragmas, an optimisation level does not set
 -- these two flags. The other flags of -O0 keep their effect. The flag has
--- no command-line spelling: uplc-ghc sets it, and unsets the two flags,
+-- no command-line spelling: kardan sets it, and unsets the two flags,
 -- in its initial DynFlags.
 --
 -- An explicit -fomit-interface-pragmas still works. Plinth needs it to
@@ -4734,7 +4734,7 @@ compilerInfo dflags
        ("Project Patch Level",         cProjectPatchLevel),
        ("Project Patch Level1",        cProjectPatchLevel1),
        ("Project Patch Level2",        cProjectPatchLevel2),
-       ("Project Unit Id",             "ghc-" ++ projectVersion dflags ++ "-plinth"),
+       ("Project Unit Id",             "ghc-" ++ projectVersion dflags ++ "-kardan"),
        ("Booter version",              cBooterVersion),
        ("Stage",                       cStage),
        ("Build platform",              cBuildPlatformString),
