@@ -89,9 +89,9 @@
 	ignore = untracked
 [submodule "utils/haddock"]
 	path = utils/haddock
-	url = https://gitlab.haskell.org/ghc/haddock.git
+	url = https://github.com/ican-group/haddock.git
 	ignore = untracked
-	branch = ghc-head
+	branch = kardan-9.6.7
 [submodule "nofib"]
 	path = nofib
 	url = https://gitlab.haskell.org/ghc/nofib.git
