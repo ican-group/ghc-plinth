@@ -101,7 +101,7 @@ import Data.Bifunctor
 import GHC.Data.Graph.Directed
 import qualified Data.List.NonEmpty as NE
 
-#if defined(PLINTH)
+#if defined(PLINTHC)
 import qualified Plinth.Plugin
 import GHC.Driver.Monad (modifySession)
 #endif
@@ -200,7 +200,7 @@ main' postLoadMode units dflags0 args flagWarnings = do
                                          DoRun    -> 0
                                          _other   -> 1
                         }
-#if defined(PLINTH)
+#if defined(PLINTHC)
                             `gopt_set` Opt_ExternalInterpreter
                             `gopt_set` Opt_WriteIfSimplifiedCore
                             `gopt_set` Opt_PluginTrustworthy
@@ -296,7 +296,7 @@ main' postLoadMode units dflags0 args flagWarnings = do
   -- Must do this before loading plugins
   liftIO $ initUniqSupply (initialUnique dflags6) (uniqueIncrement dflags6)
 
-#if defined(PLINTH)
+#if defined(PLINTHC)
   let plinth_plugin_mod_name = mkModuleName "Plinth.Plugin"
       plinth_plugin_args = [ opt
                            | (mod_name, opt) <- pluginModNameOpts dflags6
@@ -1016,8 +1016,8 @@ showBanner _postLoadMode dflags = do
        hPutStr stderr cProjectVersion
        hPutStr stderr ", stage "
        hPutStr stderr cStage
-#if defined(PLINTH)
-       hPutStr stderr " (Plinth)"
+#if defined(PLINTHC)
+       hPutStr stderr " (plinthc)"
 #endif
        hPutStr stderr " booted by GHC version "
        hPutStrLn stderr cBooterVersion
@@ -1050,8 +1050,8 @@ showSupportedExtensions m_top_dir = do
 
 showVersion :: IO ()
 showVersion =
-#if defined(PLINTH)
-  putStrLn (cProjectName ++ " (Plinth), version " ++ cProjectVersion)
+#if defined(PLINTHC)
+  putStrLn (cProjectName ++ " (plinthc), version " ++ cProjectVersion)
 #else
   putStrLn (cProjectName ++ ", version " ++ cProjectVersion)
 #endif
