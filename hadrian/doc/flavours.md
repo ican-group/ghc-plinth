@@ -323,7 +323,7 @@ The supported transformers are listed below:
     </tr>
     <tr>
         <td><code>expose_unfoldings</code></td>
-        <td>Build <code>base</code>, <code>ghc-prim</code> and <code>ghc-bignum</code> with <code>-fexpose-all-unfoldings</code>, so that their interface files have the unfoldings of all the definitions (for the Plinth compiler).</td>
+        <td>Build <code>base</code>, <code>ghc-internal</code>, <code>ghc-prim</code> and <code>ghc-bignum</code> with <code>-fexpose-all-unfoldings</code>, so that their interface files have the unfoldings of all the definitions (for the Plinth compiler).</td>
     </tr>
     <tr>
         <td><code>late_ccs</code></td>

@@ -217,14 +217,16 @@ enableHiCore = addArgs
     $ notStage0 ? builder (Ghc CompileHs)
     ? pure ["-fwrite-if-simplified-core"]
 
--- | Build base, ghc-prim and ghc-bignum with -fexpose-all-unfoldings, so
--- that their interface files have the unfoldings of all their
--- definitions. The Plinth compiler translates these unfoldings to Plutus
--- Core. Plinth code cannot use the other libraries (e.g. containers,
+-- | Build base, ghc-internal, ghc-prim and ghc-bignum with
+-- -fexpose-all-unfoldings, so that their interface files have the
+-- unfoldings of all their definitions. The Plinth compiler translates these
+-- unfoldings to Plutus Core. Since GHC 9.10 most of base is defined in
+-- ghc-internal (base mostly re-exports it), so ghc-internal is the one that
+-- matters. Plinth code cannot use the other libraries (e.g. containers,
 -- text), so they keep the smaller interface files.
 exposeUnfoldings :: Flavour -> Flavour
 exposeUnfoldings = addArgs
-    $ notStage0 ? packageOneOf [base, ghcPrim, ghcBignum] ? builder (Ghc CompileHs)
+    $ notStage0 ? packageOneOf [base, ghcInternal, ghcPrim, ghcBignum] ? builder (Ghc CompileHs)
     ? pure ["-fexpose-all-unfoldings"]
 
 -- | Transform the input 'Flavour' so as to build with
