@@ -13,16 +13,32 @@ dnl
 # see what flags are available. (Better yet, read the documentation!)
 #
 
-AC_INIT([The Glorious Glasgow Haskell Compilation System], [9.12.4], [glasgow-haskell-bugs@haskell.org], [ghc-AC_PACKAGE_VERSION])
+AC_INIT([The Glorious Glasgow Haskell Compilation System], [9.12.170], [glasgow-haskell-bugs@haskell.org], [ghc-AC_PACKAGE_VERSION])
     # Version on master must be X.Y (not X.Y.Z) for ProjectVersionMunged variable
     # to be useful (cf #19058). However, the version must have three components
     # (X.Y.Z) on stable branches (e.g. ghc-9.2) to ensure that pre-releases are
     # versioned correctly.
 
+    # Note for plinthc: this is GHC 9.12.4. The version has up to four
+    # components (the maximum tools accept) and differs from upstream GHC's.
+    #
+    # The third component encodes the Plinth version this compiler targets, using
+    # a two-digit minor: Plinth 1.70 -> 170. Bump it whenever the plutus
+    # submodule of plinthc is updated: plinthc only compiles Plinth code against
+    # the plutus-tx it was built with, and nothing else in the version would tell
+    # a user which one that is.
+    #
+    # The fourth component distinguishes builds of the same Plinth version:
+    #  - 9.12.170.DATE for a snapshot build (RELEASE=NO, the default)
+    #  - 9.12.170.X for a released build, X counting releases from 1
+    # Keep the version in this file at three components: plinthc-build.sh
+    # rewrites it to the full four-component version and passes RELEASE=YES
+    # when building a release.
+
 AC_CONFIG_MACRO_DIRS([m4])
 
 # Set this to YES for a released version, otherwise NO
-: ${RELEASE=YES}
+: ${RELEASE=NO}
 
 # The primary version (e.g. 7.5, 7.4.1) is set in the AC_INIT line
 # above.  If this is not a released version, then we will append the
