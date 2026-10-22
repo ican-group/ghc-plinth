@@ -91,7 +91,7 @@
 	path = utils/haddock
 	url = https://github.com/ican-group/haddock.git
 	ignore = untracked
-	branch = kardan-9.6.7
+	branch = plinthc-9.6.7
 [submodule "nofib"]
 	path = nofib
 	url = https://gitlab.haskell.org/ghc/nofib.git

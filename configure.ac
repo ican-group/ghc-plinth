@@ -25,14 +25,14 @@ AC_INIT([The Glorious Glasgow Haskell Compilation System], [9.6.169], [glasgow-h
     # The third component encodes the Plinth version this compiler targets, using
     # a two-digit minor: Plinth 1.69 -> 169 (a future 1.7 is 170, not 17). Bump it
     # whenever the plutus submodule is updated, and keep the plutus-tx bound in
-    # plinth/test/plinth-test.cabal in step: kardan only compiles Plinth code
+    # plinth/test/plinth-test.cabal in step: plinthc only compiles Plinth code
     # against the plutus-tx it was built with, and nothing else in the version
     # would tell a user which one that is.
     #
     # The fourth component distinguishes builds of the same Plinth version:
     #  - 9.6.169.DATE for a snapshot build (RELEASE=NO, the default)
     #  - 9.6.169.X for a released build, X counting releases from 1
-    # Keep the version in this file at three components: kardan-build.sh rewrites
+    # Keep the version in this file at three components: plinthc-build.sh rewrites
     # it to the full four-component version and passes RELEASE=YES when building a
     # release. See Note [Release versioning] there.
     #
@@ -41,7 +41,7 @@ AC_INIT([The Glorious Glasgow Haskell Compilation System], [9.6.169], [glasgow-h
     # went backwards.
     #
     # Note that this version also keys cabal's store directory
-    # (~/.cabal/store/ghc-9.6.169-kardan), so each Plinth version gets its own
+    # (~/.cabal/store/ghc-9.6.169-plinthc), so each Plinth version gets its own
     # store and cannot reuse ABI-incompatible artifacts built by another.
     #
     # In GHC 9.8+ we don't need to modify the version anymore, just the
@@ -81,8 +81,8 @@ FP_PROG_SORT
 dnl ----------------------------------------------------------
 FP_SETUP_PROJECT_VERSION
 
-dnl Build tag for custom GHC builds (e.g. "kardan"). Leave empty for vanilla GHC.
-ProjectBuildTag="kardan"
+dnl Build tag for custom GHC builds (e.g. "plinthc"). Leave empty for vanilla GHC.
+ProjectBuildTag="plinthc"
 AC_SUBST([ProjectBuildTag])
 
 dnl Don't use AC_DEFINE because it will make C-style comments invalid for
