@@ -297,6 +297,18 @@ main' postLoadMode units dflags0 args flagWarnings = do
   liftIO $ initUniqSupply (initialUnique dflags6) (uniqueIncrement dflags6)
 
 #if defined(PLINTHC)
+  -- Note [Driver plugin of the static Plinth plugin]
+  -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  -- The Plinth plugin's driverPlugin enables Strict and disables some
+  -- optimisations. It is meant for Plinth modules only: with the stock
+  -- plugin, only modules compiled with -fplugin get it. Here the plugin is
+  -- static, so it would apply to every module, dependencies included (e.g.
+  -- happy-lib, which is not correct under Strict).
+  --
+  -- So the plugin is registered as already initialised: initializePlugins
+  -- then runs driverPlugin only for modules whose Plinth plugin arguments
+  -- (-fplugin-opt Plinth.Plugin:...) differ from the registered ones. See
+  -- Note [Per-module options for static plugins] in GHC.Runtime.Loader.
   let plinth_plugin_mod_name = mkModuleName "Plinth.Plugin"
       plinth_plugin_args = [ opt
                            | (mod_name, opt) <- pluginModNameOpts dflags6
@@ -305,7 +317,8 @@ main' postLoadMode units dflags0 args flagWarnings = do
       plinth_static_plugin =
         StaticPlugin
           (PluginWithArgs Plinth.Plugin.plugin plinth_plugin_args)
-          False  -- spInitialised: initializeSessionPlugins runs it below
+          -- spInitialised: see Note [Driver plugin of the static Plinth plugin]
+          True
           (Just plinth_plugin_mod_name)
       static_plugins = [plinth_static_plugin]
 
