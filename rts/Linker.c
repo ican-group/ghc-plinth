@@ -508,7 +508,7 @@ initLinker_ (int retain_cafs)
             IF_DEBUG(linker, debugBelch("initLinker: inserting extra rts symbol %s, %p\n", sym->lbl, sym->addr));
             if (! ghciInsertSymbolTable(WSTR("(GHCi built-in symbols)"),
                                         symhash, sym->lbl, sym->addr,
-                                        sym->strength, sym->type, 0, NULL)) {
+                                        sym->strength, sym->type, 0, false, NULL)) {
                 barf("ghciInsertSymbolTable failed");
             }
         }
