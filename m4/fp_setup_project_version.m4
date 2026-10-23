@@ -67,10 +67,13 @@ AC_DEFUN([FP_SETUP_PROJECT_VERSION],
 
     # Verify that the version number has three components if a release version
     # (that is, even minor version number).
+    #
+    # plinthc: a released plinthc has four components (9.12.<plinth>.<n>, see
+    # the version note in configure.ac), so accept three or four.
     AC_MSG_CHECKING([package version validity])
     StableRelease="$(( ($VERSION_MINOR & 1) == 0))"
-    if test "$StableRelease" = "1" -a "$NumVersionComponents" != "3"; then
-        AC_MSG_ERROR([Stable (even) version numbers must have three components])
+    if test "$StableRelease" = "1" -a "$NumVersionComponents" != "3" -a "$NumVersionComponents" != "4"; then
+        AC_MSG_ERROR([Stable (even) version numbers must have three or four components])
     elif test "$StableRelease" = "0" -a "$NumVersionComponents" != "2"; then
         AC_MSG_ERROR([Unstable (odd) version numbers must have two components])
     elif test "$RELEASE" = "YES" -a "$StableRelease" = "0"; then
