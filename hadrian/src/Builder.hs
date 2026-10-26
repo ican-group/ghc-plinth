@@ -27,8 +27,6 @@ import Hadrian.Oracles.Path
 import Hadrian.Oracles.TextFile
 import Hadrian.Utilities
 import Oracles.Setting (bashPath, targetStage)
-import Data.Char (isAlpha)
-import System.Environment (lookupEnv)
 import System.Exit
 import System.IO (stderr)
 
@@ -330,13 +328,7 @@ instance H.Builder Builder where
 
                 Autoreconf dir -> do
                   bash <- bashPath
-                  -- See Note [ACLOCAL_PATH on Windows]
-                  aclocal_env <- if windowsHost
-                    then do
-                      ac_path <- liftIO (lookupEnv "ACLOCAL_PATH")
-                      pure [ AddEnv "ACLOCAL_PATH" (msysSearchPath p) | Just p <- [ac_path] ]
-                    else pure []
-                  cmd' [Cwd dir] [bash, path] buildArgs (aclocal_env ++ buildOptions)
+                  cmd' [Cwd dir] [bash, path] buildArgs buildOptions
 
                 Configure  dir -> do
                     -- Note: we intentionally do NOT set CONFIG_SHELL here.
@@ -662,25 +654,3 @@ instance (HasExit r, CmdResult r) => CmdWrap (Action r) where
             dump err
             dump out
             error "Command failed"
-
--- Note [ACLOCAL_PATH on Windows]
--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
--- On Windows, ACLOCAL_PATH holds Windows paths separated by ';' (e.g.
--- D:\a\_temp\msys64\usr\share\aclocal). aclocal splits it at ':', so a
--- drive letter becomes a path of its own and the rest a wrong absolute path
--- (/a/_temp/...). aclocal then fails when it needs a macro file from there:
---
---   aclocal: file '/a/_temp/msys64/usr/share/aclocal/progtest.m4' does not exist
---
--- ./boot already rewrites ACLOCAL_PATH to MSYS paths before it runs
--- autoreconf; do the same for the autoreconf runs of Hadrian (e.g. for the
--- configure script of the bindist).
-
--- | Turn a ';'-separated list of Windows paths into a ':'-separated list of
--- MSYS paths: @D:\\a;C:\\b@ becomes @/D/a:/C/b@.
-msysSearchPath :: String -> String
-msysSearchPath = intercalate ":" . map toMsys . splitOn ";"
-  where
-    toMsys p = case map (\c -> if c == '\\' then '/' else c) p of
-      d : ':' : '/' : rest | isAlpha d -> '/' : d : '/' : rest
-      p' -> p'
