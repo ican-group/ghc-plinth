@@ -204,6 +204,9 @@ main' postLoadMode units dflags0 args flagWarnings = do
                             `gopt_set` Opt_PluginTrustworthy
                             -- See Note [Keep interface pragmas] in GHC.Driver.Session
                             `gopt_set` Opt_KeepInterfacePragmas
+                            -- See Note [Plinth status] in GHC.Plinth.Status
+                            `gopt_set` Opt_PlinthStatus
+                            `gopt_set` Opt_PlinthGate
                             `gopt_unset` Opt_OmitInterfacePragmas
                             `gopt_unset` Opt_IgnoreInterfacePragmas
 #endif

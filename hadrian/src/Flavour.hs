@@ -66,6 +66,7 @@ flavourTransformers = M.fromList
     , "haddock"          =: enableHaddock
     , "hi_core"          =: enableHiCore
     , "expose_unfoldings" =: exposeUnfoldings
+    , "plinth_status"    =: plinthStatus
     , "late_ccs"         =: enableLateCCS
     , "boot_nonmoving_gc" =: enableBootNonmovingGc
     ]
@@ -201,6 +202,15 @@ exposeUnfoldings :: Flavour -> Flavour
 exposeUnfoldings = addArgs
     $ notStage0 ? packageOneOf [base, ghcPrim, ghcBignum] ? builder (Ghc CompileHs)
     ? pure ["-fexpose-all-unfoldings"]
+
+-- | Build every stage1 library with -fplinth-status, so that their
+-- interface files carry the Plinth status of every binding. The Plinth
+-- compiler reads these statuses at the use sites. Only the stage1
+-- compiler knows the flag.
+plinthStatus :: Flavour -> Flavour
+plinthStatus = addArgs
+    $ notStage0 ? builder (Ghc CompileHs)
+    ? pure ["-fplinth-status"]
 
 -- | Transform the input 'Flavour' so as to build with
 --   @-split-sections@ whenever appropriate.

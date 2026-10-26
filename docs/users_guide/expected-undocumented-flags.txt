@@ -96,3 +96,7 @@
 -rtsopts=some
 -syslib
 -this-component-id
+-fplinth-status
+-fplinth-gate
+-fplinth-gate-warn
+-ddump-plinth-status
