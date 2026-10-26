@@ -70,6 +70,7 @@ import GHC.Core.TyCon ( Role (..), Injectivity(..), tyConBndrVisForAllTyFlag )
 import GHC.Core.DataCon (SrcStrictness(..), SrcUnpackedness(..))
 import GHC.Builtin.Types ( constraintKindTyConName )
 import GHC.Stg.InferTags.TagSig
+import GHC.Plinth.Status
 
 import GHC.Utils.Lexeme (isLexSym)
 import GHC.Utils.Fingerprint
@@ -363,6 +364,23 @@ data IfaceInfoItem
   | HsSrcSpan       RealSrcSpan
                     -- ^ Definition span of the binder.
                     -- See Note [Preserving binder SrcSpans in interfaces]
+  | HsPlinthStatus  PlinthStatus
+                    -- ^ Is the binder valid Plinth code?
+                    -- See Note [Plinth status in interfaces]
+
+-- Note [Plinth status in interfaces]
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- The Plinth checker (GHC.Plinth.Check) tags every top-level binder with a
+-- 'PlinthStatus' in its IdInfo (see Note [Plinth status] in
+-- GHC.Plinth.Status). The tag travels to the interface as an
+-- 'HsPlinthStatus' item so that importing modules can read it without the
+-- unfolding. 'tcIdInfo' always reads it back, even under
+-- -fignore-interface-pragmas: the gate at a use site needs the status of
+-- every imported binder.
+--
+-- The status and its culprit are part of the ABI hash of the binder, so a
+-- status change recompiles the dependents. The culprit span is dropped from
+-- the hash ('abiForHash' in GHC.Iface.Recomp), like 'HsSrcSpan'.
 
 -- Note [Preserving binder SrcSpans in interfaces]
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1539,6 +1557,7 @@ instance Outputable IfaceInfoItem where
   ppr HsNoCafRefs           = text "HasNoCafRefs"
   ppr (HsLFInfo lf_info)    = text "LambdaFormInfo:" <+> ppr lf_info
   ppr (HsSrcSpan sp)        = text "DefSpan:" <+> ppr sp
+  ppr (HsPlinthStatus st)   = text "Plinth:" <+> ppr st
   ppr (HsTagSig tag_sig)    = text "TagSig:" <+> ppr tag_sig
 
 instance Outputable IfaceJoinInfo where
@@ -2304,13 +2323,8 @@ instance Binary IfaceInfoItem where
     put_ bh (HsCprSig cpr)        = putByte bh 6 >> put_ bh cpr
     put_ bh (HsLFInfo lf_info)    = putByte bh 7 >> put_ bh lf_info
     put_ bh (HsTagSig sig)        = putByte bh 8 >> put_ bh sig
-    put_ bh (HsSrcSpan src)       = do
-        putByte bh 5
-        put_ bh (srcSpanFile src)
-        put_ bh (srcSpanStartLine src)
-        put_ bh (srcSpanStartCol src)
-        put_ bh (srcSpanEndLine src)
-        put_ bh (srcSpanEndCol src)
+    put_ bh (HsSrcSpan src)       = putByte bh 5 >> putBinRealSrcSpan bh src
+    put_ bh (HsPlinthStatus st)   = putByte bh 9 >> put_ bh st
 
     get bh = do
         h <- getByte bh
@@ -2322,15 +2336,10 @@ instance Binary IfaceInfoItem where
                     return (HsUnfold lb ad)
             3 -> liftM HsInline $ get bh
             4 -> return HsNoCafRefs
-            5 -> do file <- get bh
-                    sl <- get bh
-                    sc <- get bh
-                    el <- get bh
-                    ec <- get bh
-                    return (HsSrcSpan (mkRealSrcSpan (mkRealSrcLoc file sl sc)
-                                                     (mkRealSrcLoc file el ec)))
+            5 -> HsSrcSpan <$> getBinRealSrcSpan bh
             6 -> HsCprSig <$> get bh
             7 -> HsLFInfo <$> get bh
+            9 -> HsPlinthStatus <$> get bh
             _ -> HsTagSig <$> get bh
 
 instance Binary IfaceUnfolding where
@@ -2741,6 +2750,7 @@ instance NFData IfaceInfoItem where
     HsLFInfo lf_info -> lf_info `seq` () -- TODO: seq further?
     HsTagSig sig -> sig `seq` ()
     HsSrcSpan sp -> sp `seq` ()
+    HsPlinthStatus st -> rnf st
 
 instance NFData IfGuidance where
   rnf = \case
