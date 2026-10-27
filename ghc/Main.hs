@@ -100,7 +100,9 @@ import GHC.Data.Graph.Directed
 import qualified Data.List.NonEmpty as NE
 
 #if defined(PLINTHC)
-import qualified Plinth.Plugin
+-- The plugin with the cost report. See Note [Cost reporter hook] in
+-- plutus-tx-plugin:PlutusTx.Plugin.Common.
+import qualified Plinth.Plugin.Static
 import GHC.Driver.Monad (modifySession)
 #endif
 
@@ -282,7 +284,7 @@ main' postLoadMode units dflags0 args flagWarnings = do
                            ]
       plinth_static_plugin =
         StaticPlugin
-          (PluginWithArgs Plinth.Plugin.plugin plinth_plugin_args)
+          (PluginWithArgs Plinth.Plugin.Static.plugin plinth_plugin_args)
           (Just plinth_plugin_mod_name)
       static_plugins = [plinth_static_plugin]
 
