@@ -257,6 +257,19 @@ option. The list of enabled plugins can be reset with the
     unsafe. With this flag passed, all plugins are treated as trustworthy
     and the safety inference will no longer be affected.
 
+.. ghc-flag:: -fplinth-⟨key⟩[=⟨value⟩]
+    :shortdesc: Give an option to the Plinth plugin (plinthc only)
+    :type: dynamic
+    :reverse: -fno-plinth-⟨key⟩
+    :category: plugins
+
+    Give the option ⟨key⟩ (with the optional ⟨value⟩) to the Plinth
+    plugin of plinthc. It is the same as
+    ``-fplugin-opt=Plinth.Plugin:⟨key⟩[=⟨value⟩]``, which is deprecated.
+    ``-fno-plinth-⟨key⟩`` is the same as ``-fplinth-no-⟨key⟩``. ::
+
+      {-# OPTIONS_GHC -fplinth-target-protocol-version=12 #-}
+
 .. ghc-flag:: -fclear-plugins
     :shortdesc: Clear the list of active plugins
     :type: dynamic
