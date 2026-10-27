@@ -2553,6 +2553,8 @@ dynamic_flags_deps = [
         (setDumpFlag Opt_D_dump_tc)
   , make_ord_flag defGhcFlag "ddump-tc-ast"
         (setDumpFlag Opt_D_dump_tc_ast)
+  , make_ord_flag defGhcFlag "ddump-plinth-status"
+        (setDumpFlag Opt_D_dump_plinth_status)
   , make_ord_flag defGhcFlag "ddump-hie"
         (setDumpFlag Opt_D_dump_hie)
   , make_ord_flag defGhcFlag "ddump-types"
@@ -3466,6 +3468,9 @@ fFlagsDeps = [
   flagSpec "omit-yields"                      Opt_OmitYields,
   flagSpec "optimal-applicative-do"           Opt_OptimalApplicativeDo,
   flagSpec "pedantic-bottoms"                 Opt_PedanticBottoms,
+  flagSpec "plinth-gate"                      Opt_PlinthGate,
+  flagSpec "plinth-gate-warn"                 Opt_PlinthGateWarn,
+  flagSpec "plinth-status"                    Opt_PlinthStatus,
   flagSpec "pre-inlining"                     Opt_SimplPreInlining,
   flagGhciSpec "print-bind-contents"          Opt_PrintBindContents,
   flagGhciSpec "print-bind-result"            Opt_PrintBindResult,
@@ -3914,6 +3919,8 @@ impliedGFlags = [(Opt_DeferTypeErrors, turnOn, Opt_DeferTypedHoles)
                 ,(Opt_ByteCodeAndObjectCode, turnOn, Opt_WriteIfSimplifiedCore)
                 ,(Opt_InfoTableMap, turnOn, Opt_InfoTableMapWithStack)
                 ,(Opt_InfoTableMap, turnOn, Opt_InfoTableMapWithFallback)
+                ,(Opt_PlinthGate, turnOn, Opt_PlinthStatus)
+                ,(Opt_PlinthGateWarn, turnOn, Opt_PlinthStatus)
                 ] ++ validHoleFitsImpliedGFlags
 
 -- General flags that are switched on/off when other general flags are switched

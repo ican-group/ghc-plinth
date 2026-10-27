@@ -472,10 +472,14 @@ toIfaceIdDetails other = pprTrace "toIfaceIdDetails" (ppr other)
 toIfaceIdInfo :: IdInfo -> IfaceIdInfo
 toIfaceIdInfo id_info
   = catMaybes [arity_hsinfo, caf_hsinfo, strict_hsinfo, cpr_hsinfo,
-               inline_hsinfo,  unfold_hsinfo]
+               inline_hsinfo,  unfold_hsinfo, plinth_hsinfo]
                -- NB: strictness and arity must appear in the list before unfolding
                -- See GHC.IfaceToCore.tcUnfolding
   where
+    ------------  Plinth status  --------------
+    -- See Note [Plinth status in interfaces] in GHC.Iface.Syntax
+    plinth_hsinfo = HsPlinthStatus <$> plinthStatusInfo id_info
+
     ------------  Arity  --------------
     arity_info = arityInfo id_info
     arity_hsinfo | arity_info == 0 = Nothing

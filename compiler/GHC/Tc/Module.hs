@@ -69,6 +69,7 @@ import GHC.Tc.Gen.Expr
 import GHC.Tc.Gen.App( tcInferSigma )
 import GHC.Tc.Utils.Monad
 import GHC.Tc.Gen.Export
+import GHC.Plinth.Check ( plinthCheckModule )
 import GHC.Tc.Types.Evidence
 import GHC.Tc.Types.Constraint
 import GHC.Tc.Types.Origin
@@ -356,7 +357,9 @@ tcRnModuleTcRnM hsc_env mod_sum
                         addDependentFiles src_files
                         -- Ensure plugins run with the same tcg_env that we pass in
                       ; setGblEnv tcg_env
-                        $ do { tcg_env <- runTypecheckerPlugin mod_sum tcg_env
+                        $ do { -- See Note [The Plinth checker] in GHC.Plinth.Check
+                               tcg_env <- plinthCheckModule mod_sum tcg_env
+                             ; tcg_env <- runTypecheckerPlugin mod_sum tcg_env
                              ; -- Dump output and return
                                tcDump tcg_env
                              ; return tcg_env

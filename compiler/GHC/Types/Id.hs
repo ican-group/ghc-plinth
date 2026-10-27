@@ -123,7 +123,11 @@ module GHC.Types.Id (
         idCprSig,
 
         idTagSig_maybe,
-        setIdTagSig
+        setIdTagSig,
+
+        -- ** Plinth status
+        idPlinthStatus,
+        setIdPlinthStatus
     ) where
 
 import GHC.Prelude
@@ -788,6 +792,14 @@ setIdDemandInfo id dmd = modifyIdInfo (`setDemandInfo` dmd) id
 
 setIdTagSig :: Id -> TagSig -> Id
 setIdTagSig id sig = modifyIdInfo (`setTagSig` sig) id
+
+-- | The Plinth status of a top-level Id, if it was checked.
+-- See Note [Plinth status] in GHC.Plinth.Status
+idPlinthStatus :: Id -> Maybe PlinthStatus
+idPlinthStatus = plinthStatusInfo . idInfo
+
+setIdPlinthStatus :: Id -> PlinthStatus -> Id
+setIdPlinthStatus id st = modifyIdInfo (`setPlinthStatusInfo` Just st) id
 
 -- | If all marks are NotMarkedStrict we just set nothing.
 setIdCbvMarks :: Id -> [CbvMark] -> Id
