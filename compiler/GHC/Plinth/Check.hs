@@ -356,7 +356,10 @@ factVerdict env ctx (fact, sp) = case fact of
     wholeDicts tms = firstResult =<< mapM (factVerdict env ctx)
                        (concat [ f_facts (walkEvTerm sp tm) | tm <- tms ])
 
+    -- A method the table rejects by policy (toBuiltin) is a leaf: the
+    -- instance's implementation would only be an optimiser artefact.
     selFact v tm
+      | Just verdict <- idVerdict v = fromVerdict (idName v) verdict
       | Just cls <- isClassOpId_maybe v
       , Just verdict <- classVerdict cls = fromVerdict (className cls) verdict
       | Just cls <- isClassOpId_maybe v = selVerdict cls v emptyVarSet tm
