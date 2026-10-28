@@ -408,6 +408,24 @@ integerNe !x !y = isTrue# (integerNe# x y)
 integerEq :: Integer -> Integer -> Bool
 integerEq !x !y = isTrue# (integerEq# x y)
    -- See Note [Bangs in Integer functions]
+{-# INLINE [0] integerEq #-}
+   -- See Note [Plinth: integerEq in stable unfoldings]
+
+{- Note [Plinth: integerEq in stable unfoldings]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The Plinth plugin compiles a definition from its stable unfolding (plinthc
+makes all bindings INLINABLE), and it compiles a call to integerEq to the
+builtin equalsInteger. A literal pattern on Integer desugars to such a call:
+
+    isAnswer 42 = True      -- isAnswer = \ds -> integerEq ds (IS 42#)
+    isAnswer _  = False
+
+The simplifier simplifies a stable unfolding in the phase where the unfolding
+becomes active, usually InitialPhase. Without a pragma, integerEq inlines
+there, and the unfolding becomes a case on IS/IP/IN, which the plugin cannot
+compile. INLINE [0] stops this. Code compiled with -O still inlines integerEq,
+in phase 0.
+-}
 
 -- | Lower-or-equal predicate.
 integerLe :: Integer -> Integer -> Bool
