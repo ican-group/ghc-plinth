@@ -29,6 +29,7 @@ import GHC.Driver.Ppr
 import GHC.Driver.Plugins
 
 import GHC.Iface.Syntax
+import GHC.Plinth.Status (plinthStatusForHash)
 import GHC.Iface.Recomp.Binary
 import GHC.Iface.Load
 import GHC.Iface.Recomp.Flags
@@ -1410,13 +1411,18 @@ abiDecl (_, decl, _) = decl
 -- line-number change (e.g. adding a comment above a binding) trigger spurious
 -- recompilation of dependents. Only the ABI used for hashing is stripped; the
 -- decl written to disk keeps the span.
+--
+-- The span inside an 'HsPlinthStatus' item is dropped for the same reason;
+-- the status itself and its culprit stay in the hash. See Note [Plinth status
+-- in interfaces] in GHC.Iface.Syntax.
 abiForHash :: IfaceDeclABI -> IfaceDeclABI
 abiForHash (m, decl, extras) = (m, strip decl, extras)
   where
-    strip d@IfaceId{ifIdInfo = info} = d { ifIdInfo = filter (not . isSrcSpanItem) info }
+    strip d@IfaceId{ifIdInfo = info} = d { ifIdInfo = mapMaybe strip_item info }
     strip d = d
-    isSrcSpanItem (HsSrcSpan _) = True
-    isSrcSpanItem _             = False
+    strip_item (HsSrcSpan _)        = Nothing
+    strip_item (HsPlinthStatus st)  = Just (HsPlinthStatus (plinthStatusForHash st))
+    strip_item item                 = Just item
 
 cmp_abiNames :: IfaceDeclABI -> IfaceDeclABI -> Ordering
 cmp_abiNames abi1 abi2 = getOccName (abiDecl abi1) `compare`

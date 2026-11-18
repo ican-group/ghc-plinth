@@ -81,6 +81,10 @@ module GHC.Types.Id.Info (
 
         tagSig,
 
+        -- ** The Plinth status
+        PlinthStatus(..),
+        plinthStatusInfo, setPlinthStatusInfo,
+
         -- ** Tick-box Info
         TickBoxOp(..), TickBoxId,
     ) where
@@ -105,6 +109,7 @@ import GHC.Utils.Outputable
 import GHC.Utils.Panic
 import GHC.Utils.Panic.Plain
 import GHC.Stg.InferTags.TagSig
+import GHC.Plinth.Status
 
 import Data.Word
 
@@ -120,7 +125,8 @@ infixl  1 `setRuleInfo`,
           `setCafInfo`,
           `setDmdSigInfo`,
           `setCprSigInfo`,
-          `setDemandInfo`
+          `setDemandInfo`,
+          `setPlinthStatusInfo`
 {-
 ************************************************************************
 *                                                                      *
@@ -372,7 +378,11 @@ data IdInfo
         -- ^ See Note [The LFInfo of Imported Ids] in GHC.StgToCmm.Closure
 
         -- See documentation of the getters for what these packed fields mean.
-        tagSig          :: !(Maybe TagSig)
+        tagSig          :: !(Maybe TagSig),
+
+        plinthStatusInfo :: !(Maybe PlinthStatus)
+        -- ^ Is the Id valid Plinth code? Nothing = not checked.
+        -- See Note [Plinth status] in GHC.Plinth.Status
     }
 
 -- | Encodes arities, OneShotInfo, CafInfo.
@@ -504,6 +514,9 @@ setLFInfo info lf = info { lfInfo = Just lf }
 setTagSig :: IdInfo -> TagSig -> IdInfo
 setTagSig info sig = info { tagSig = Just sig }
 
+setPlinthStatusInfo :: IdInfo -> Maybe PlinthStatus -> IdInfo
+setPlinthStatusInfo info st = info { plinthStatusInfo = st }
+
 setOneShotInfo :: IdInfo -> OneShotInfo -> IdInfo
 setOneShotInfo info lb =
     info { bitfield = bitfieldSetOneShotInfo lb (bitfield info) }
@@ -534,7 +547,8 @@ vanillaIdInfo
                              bitfieldSetOneShotInfo NoOneShotInfo $
                              emptyBitField,
             lfInfo         = Nothing,
-            tagSig         = Nothing
+            tagSig         = Nothing,
+            plinthStatusInfo = Nothing
            }
 
 -- | More informative 'IdInfo' we can use when we know the 'Id' has no CAF references

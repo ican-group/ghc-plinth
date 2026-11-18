@@ -317,6 +317,10 @@ The supported transformers are listed below:
         <td>Build <code>base</code>, <code>ghc-prim</code> and <code>ghc-bignum</code> with <code>-fexpose-all-unfoldings</code>, so that their interface files have the unfoldings of all the definitions (for the Plinth compiler).</td>
     </tr>
     <tr>
+        <td><code>plinth_status</code></td>
+        <td>Build the stage1 libraries with <code>-fplinth-status</code>, so that their interface files carry the Plinth status of every binding (for the Plinth compiler).</td>
+    </tr>
+    <tr>
         <td><code>late_ccs</code></td>
         <td>Enable <code>-fprof-late</code> in profiled libraries.</td>
     </tr>

@@ -73,7 +73,11 @@ fingerprintDynFlags hsc_env this_mod nameio =
         -- Did we include core for all bindings?
         fat_iface = gopt Opt_WriteIfSimplifiedCore dflags
 
-        flags = ((mainis, safeHs, lang, cpp), (paths, prof, ticky, codegen, debugLevel, callerCcFilters, fat_iface))
+        -- The Plinth status in the interface depends on these.
+        -- See Note [Plinth status in interfaces] in GHC.Iface.Syntax
+        plinth = map (`gopt` dflags) [Opt_PlinthStatus, Opt_PlinthGate, Opt_PlinthGateWarn]
+
+        flags = ((mainis, safeHs, lang, cpp), (paths, prof, ticky, codegen, debugLevel, callerCcFilters, (fat_iface, plinth)))
 
     in -- pprTrace "flags" (ppr flags) $
        computeFingerprint nameio flags

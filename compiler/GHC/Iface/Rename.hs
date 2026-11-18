@@ -17,6 +17,7 @@ import GHC.Driver.Env
 import GHC.Tc.Utils.Monad
 
 import GHC.Iface.Syntax
+import GHC.Plinth.Status
 import GHC.Iface.Env
 import {-# SOURCE #-} GHC.Iface.Load -- a bit vexing
 
@@ -592,6 +593,9 @@ rnIfaceIdInfo = mapM rnIfaceInfoItem
 rnIfaceInfoItem :: Rename IfaceInfoItem
 rnIfaceInfoItem (HsUnfold lb if_unf)
     = HsUnfold lb <$> rnIfaceUnfolding if_unf
+rnIfaceInfoItem (HsPlinthStatus (PlinthBad bad@MkPlinthBad { pb_culprit = Just (CulpritExt m occ) }))
+    = do m' <- rnModule m
+         pure (HsPlinthStatus (PlinthBad bad { pb_culprit = Just (CulpritExt m' occ) }))
 rnIfaceInfoItem i
     = pure i
 

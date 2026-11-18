@@ -117,6 +117,7 @@ data DumpFlag
    | Opt_D_dump_cpr_signatures
    | Opt_D_dump_tc
    | Opt_D_dump_tc_ast
+   | Opt_D_dump_plinth_status
    | Opt_D_dump_hie
    | Opt_D_dump_types
    | Opt_D_dump_rules
@@ -313,6 +314,10 @@ data GeneralFlag
    | Opt_IgnoreInterfacePragmas
    | Opt_OmitInterfacePragmas
    | Opt_KeepInterfacePragmas -- See Note [Keep interface pragmas] in GHC.Driver.Session
+   | Opt_PlinthStatus         -- compute and store the Plinth status of every binding
+   | Opt_PlinthGate           -- reject invalid Plinth splices at typecheck time
+   | Opt_PlinthGateWarn       -- ... as warnings only
+                              -- See Note [Plinth status] in GHC.Plinth.Status
    | Opt_ExposeAllUnfoldings
    | Opt_WriteInterface -- forces .hi files to be written even with -fno-code
    | Opt_WriteHie -- generate .hie files

@@ -1,5 +1,6 @@
 
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE LambdaCase #-}
 
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# LANGUAGE NamedFieldPuns #-}
@@ -55,6 +56,8 @@ import GHC.Types.Id.Info
 import GHC.Types.Demand  ( isDeadEndAppSig, isNopSig, nopSig, isDeadEndSig )
 import GHC.Types.Basic
 import GHC.Types.Name hiding (varName)
+import GHC.Plinth.Status
+import GHC.Data.FastString (fsLit)
 import GHC.Types.Name.Set
 import GHC.Types.Name.Cache
 import GHC.Types.Avail
@@ -357,6 +360,9 @@ data TidyOpts = TidyOpts
       -- ^ Are rules exposed or not?
   , opt_static_ptr_opts :: !(Maybe StaticPtrOpts)
       -- ^ Options for generated static pointers, if enabled (/= Nothing).
+  , opt_plinth_status :: !Bool
+      -- ^ Finish the Plinth status of the binders (-fplinth-status).
+      -- See 'tidyPlinthStatus'.
   }
 
 tidyProgram :: TidyOpts -> ModGuts -> IO (CgGuts, ModDetails)
@@ -380,11 +386,13 @@ tidyProgram opts (ModGuts { mg_module           = mod
 
   let implicit_binds = concatMap getImplicitBinds tcs
       all_binds = implicit_binds ++ binds
+      plinth | opt_plinth_status opts = Just mod
+             | otherwise = Nothing
 
   (unfold_env, tidy_occ_env) <- chooseExternalIds opts mod all_binds imp_rules
   let (trimmed_binds, trimmed_rules) = findExternalRules opts all_binds imp_rules unfold_env
 
-  (tidy_env, tidy_binds) <- tidyTopBinds unfold_env boot_exports tidy_occ_env trimmed_binds
+  (tidy_env, tidy_binds) <- tidyTopBinds plinth unfold_env boot_exports tidy_occ_env trimmed_binds
 
   -- See Note [Grand plan for static forms] in GHC.Iface.Tidy.StaticPtrTable.
   (spt_entries, mcstub, tidy_binds') <- case opt_static_ptr_opts opts of
@@ -1153,46 +1161,49 @@ tidyTopName mod name_cache maybe_ref occ_env id
 --
 --   * subst_env: A Var->Var mapping that substitutes the new Var for the old
 
-tidyTopBinds :: UnfoldEnv
+tidyTopBinds :: Maybe Module   -- ^ Just the module: finish the Plinth statuses
+             -> UnfoldEnv
              -> NameSet
              -> TidyOccEnv
              -> CoreProgram
              -> IO (TidyEnv, CoreProgram)
 
-tidyTopBinds unfold_env boot_exports init_occ_env binds
+tidyTopBinds plinth unfold_env boot_exports init_occ_env binds
   = do let result = tidy init_env binds
        seqBinds (snd result) `seq` return result
        -- This seqBinds avoids a spike in space usage (see #13564)
   where
     init_env = (init_occ_env, emptyVarEnv)
 
-    tidy = mapAccumL (tidyTopBind unfold_env boot_exports)
+    tidy = mapAccumL (tidyTopBind plinth unfold_env boot_exports)
 
 ------------------------
-tidyTopBind  :: UnfoldEnv
+tidyTopBind  :: Maybe Module
+             -> UnfoldEnv
              -> NameSet
              -> TidyEnv
              -> CoreBind
              -> (TidyEnv, CoreBind)
 
-tidyTopBind unfold_env boot_exports
+tidyTopBind plinth unfold_env boot_exports
             (occ_env,subst1) (NonRec bndr rhs)
   = (tidy_env2,  NonRec bndr' rhs')
   where
-    (bndr', rhs') = tidyTopPair unfold_env boot_exports tidy_env2 (bndr, rhs)
+    (bndr', rhs') = tidyTopPair plinth unfold_env boot_exports tidy_env2 (bndr, rhs)
     subst2        = extendVarEnv subst1 bndr bndr'
     tidy_env2     = (occ_env, subst2)
 
-tidyTopBind unfold_env boot_exports (occ_env, subst1) (Rec prs)
+tidyTopBind plinth unfold_env boot_exports (occ_env, subst1) (Rec prs)
   = (tidy_env2, Rec prs')
   where
-    prs'      = map (tidyTopPair unfold_env boot_exports tidy_env2) prs
+    prs'      = map (tidyTopPair plinth unfold_env boot_exports tidy_env2) prs
     subst2    = extendVarEnvList subst1 (map fst prs `zip` map fst prs')
     tidy_env2 = (occ_env, subst2)
     -- This is where we "tie the knot": tidy_env2 is fed into tidyTopPair
 
 -----------------------------------------------------------
-tidyTopPair :: UnfoldEnv
+tidyTopPair :: Maybe Module
+            -> UnfoldEnv
             -> NameSet
             -> TidyEnv  -- The TidyEnv is used to tidy the IdInfo
                         -- It is knot-tied: don't look at it!
@@ -1204,7 +1215,7 @@ tidyTopPair :: UnfoldEnv
         -- group, a variable late in the group might be mentioned
         -- in the IdInfo of one early in the group
 
-tidyTopPair unfold_env boot_exports rhs_tidy_env (bndr, rhs)
+tidyTopPair plinth unfold_env boot_exports rhs_tidy_env (bndr, rhs)
   = -- pprTrace "tidyTop" (ppr name' <+> ppr details <+> ppr rhs) $
     (bndr1, rhs1)
 
@@ -1217,6 +1228,33 @@ tidyTopPair unfold_env boot_exports rhs_tidy_env (bndr, rhs)
     rhs1     = tidyExpr rhs_tidy_env rhs
     idinfo'  = tidyTopIdInfo rhs_tidy_env name' ty'
                              rhs rhs1 (idInfo cbv_bndr) show_unfold
+                             plinth_status
+    plinth_status = case plinth of
+      Just this_mod -> tidyPlinthStatus unfold_env this_mod (plinthStatusInfo (idInfo cbv_bndr))
+      Nothing -> plinthStatusInfo (idInfo cbv_bndr)
+
+-- | The Plinth status of a top-level binder, for the interface.
+--
+-- A binder that has no status is one the typechecker did not see: the
+-- optimiser created it (a floated expression, a worker, a specialisation).
+-- The Plinth check cannot vouch for it, so it is Bad. The implicit
+-- bindings (constructor wrappers, class method selectors) have no status
+-- either, but the check decides on them from their IdDetails and never
+-- reads it.
+--
+-- A culprit that names a binder of this module follows the renaming of
+-- that binder: see Note [Plinth status] in GHC.Plinth.Status.
+tidyPlinthStatus :: UnfoldEnv -> Module -> Maybe PlinthStatus -> Maybe PlinthStatus
+tidyPlinthStatus unfold_env this_mod = \case
+  Nothing -> Just (PlinthBad (MkPlinthBad Nothing (fsLit "a binding that the optimiser created")
+                                (Just (fsLit "the Plinth check did not see it")) Nothing))
+  Just (PlinthBad bad@(MkPlinthBad { pb_culprit = Just (CulpritName m n) }))
+    -> Just (PlinthBad bad { pb_culprit = Just (CulpritExt m' occ') })
+    where
+      (m', occ') = case lookupVarEnv_Directly unfold_env (nameUnique n) of
+        Just (new_name, _) -> (fromMaybe m (nameModule_maybe new_name), nameOccName new_name)
+        Nothing -> (fromMaybe this_mod (nameModule_maybe n), nameOccName n)
+  st -> st
 
 -- tidyTopIdInfo creates the final IdInfo for top-level
 -- binders.  The delicate piece:
@@ -1226,8 +1264,9 @@ tidyTopPair unfold_env boot_exports rhs_tidy_env (bndr, rhs)
 --      the manifest arity equal to the claimed arity.
 --
 tidyTopIdInfo :: TidyEnv -> Name -> Type
-              -> CoreExpr -> CoreExpr -> IdInfo -> Bool -> IdInfo
-tidyTopIdInfo rhs_tidy_env name rhs_ty orig_rhs tidy_rhs idinfo show_unfold
+              -> CoreExpr -> CoreExpr -> IdInfo -> Bool
+              -> Maybe PlinthStatus -> IdInfo
+tidyTopIdInfo rhs_tidy_env name rhs_ty orig_rhs tidy_rhs idinfo show_unfold plinth_status
   | not is_external     -- For internal Ids (not externally visible)
   = vanillaIdInfo       -- we only need enough info for code generation
                         -- Arity and strictness info are enough;
@@ -1237,6 +1276,7 @@ tidyTopIdInfo rhs_tidy_env name rhs_ty orig_rhs tidy_rhs idinfo show_unfold
         `setCprSigInfo`     final_cpr
         `setUnfoldingInfo`  minimal_unfold_info  -- See note [Preserve evaluatedness]
                                                  -- in GHC.Core.Tidy
+        `setPlinthStatusInfo` plinth_status
 
   | otherwise           -- Externally-visible Ids get the whole lot
   = vanillaIdInfo
@@ -1246,6 +1286,7 @@ tidyTopIdInfo rhs_tidy_env name rhs_ty orig_rhs tidy_rhs idinfo show_unfold
         `setOccInfo`         robust_occ_info
         `setInlinePragInfo`  inlinePragInfo idinfo
         `setUnfoldingInfo`   unfold_info
+        `setPlinthStatusInfo` plinth_status
                 -- NB: we throw away the Rules
                 -- They have already been extracted by findExternalRules
   where

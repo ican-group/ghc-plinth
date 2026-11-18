@@ -1743,6 +1743,9 @@ tcIdInfo ignore_prags toplvl name ty info = do
       -- Always read in compulsory unfoldings
       -- See Note [Always expose compulsory unfoldings] in GHC.Iface.Tidy
     need_prag (HsUnfold _ (IfCoreUnfold src _ _ _)) = isCompulsorySource src
+      -- The Plinth gate needs the status of every imported binder.
+      -- See Note [Plinth status in interfaces] in GHC.Iface.Syntax
+    need_prag (HsPlinthStatus _) = True
     need_prag _ = False
 
     tcPrag :: IdInfo -> IfaceInfoItem -> IfL IdInfo
@@ -1757,6 +1760,8 @@ tcIdInfo ignore_prags toplvl name ty info = do
 
     tcPrag info (HsTagSig sig) = do
       return (info `setTagSig` sig)
+
+    tcPrag info (HsPlinthStatus st) = return (info `setPlinthStatusInfo` Just st)
 
     -- Consumed in 'tc_iface_decl' to restore the binder's Name SrcSpan; carries
     -- no IdInfo. See Note [Preserving binder SrcSpans in interfaces] in GHC.Iface.Syntax.
