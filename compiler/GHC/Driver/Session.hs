@@ -275,7 +275,7 @@ import Data.Functor.Identity
 
 import Data.Ord
 import Data.Char
-import Data.List (intercalate, sortBy)
+import Data.List (intercalate, sortBy, stripPrefix)
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Map as Map
 import qualified Data.Set as Set
@@ -1721,6 +1721,39 @@ addPluginModuleNameOption optflag d = d { pluginModNameOpts = (mkModuleName m, o
           [] -> "" -- should probably signal an error
           (_:plug_opt) -> plug_opt -- ignore the ':' from break
 
+-- Note [Plinth option flags]
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- The Plinth plugin (Plinth.Plugin) is a static plugin of plinthc. Its
+-- options have short flag spellings:
+--
+--   -fplinth-KEY[=VAL]   is  -fplugin-opt Plinth.Plugin:KEY[=VAL]
+--   -fno-plinth-KEY      is  -fplugin-opt Plinth.Plugin:no-KEY
+--
+-- The flags only add an entry to pluginModNameOpts. Thus they work in the
+-- same places as -fplugin-opt: on the command line, in cabal ghc-options
+-- and in OPTIONS_GHC pragmas (per-module, see Note [Per-module options for
+-- static plugins] in GHC.Runtime.Loader). The plugin validates KEY and VAL.
+--
+-- The long spelling still works, but it gives a -Wdeprecated-flags warning.
+--
+-- The flags use Prefix and findArg selects the longest flag name, thus a
+-- specific flag such as -fplinth-foo in the flag table has priority.
+
+plinthPluginOptPrefix :: String
+plinthPluginOptPrefix = "Plinth.Plugin:"
+
+addPlinthOption :: String -> DynFlags -> DynFlags
+addPlinthOption opt = addPluginModuleNameOption (plinthPluginOptPrefix ++ opt)
+
+-- | -fplugin-opt, with a deprecation warning for the Plinth plugin.
+-- See Note [Plinth option flags]
+add_plugin_opt :: String -> EwM (CmdLineP DynFlags) ()
+add_plugin_opt optflag = do
+  case stripPrefix plinthPluginOptPrefix optflag of
+    Just opt -> deprecate ("use -fplinth-" ++ opt ++ " instead")
+    Nothing  -> pure ()
+  upd (addPluginModuleNameOption optflag)
+
 addExternalPlugin :: String -> DynFlags -> DynFlags
 addExternalPlugin optflag d = case parseExternalPluginSpec optflag of
   Just r  -> d { externalPluginSpecs = r : externalPluginSpecs d }
@@ -2726,7 +2759,11 @@ dynamic_flags_deps = [
                                              unSetWarningFlag minusWcompatOpts))
 
         ------ Plugin flags ------------------------------------------------
-  , make_ord_flag defGhcFlag "fplugin-opt" (hasArg addPluginModuleNameOption)
+  , make_ord_flag defGhcFlag "fplugin-opt" (HasArg add_plugin_opt)
+    -- See Note [Plinth option flags]
+  , make_ord_flag defGhcFlag "fplinth-"    (Prefix (upd . addPlinthOption))
+  , make_ord_flag defGhcFlag "fno-plinth-"
+      (Prefix (upd . addPlinthOption . ("no-" ++)))
   , make_ord_flag defGhcFlag "fplugin-trustworthy"
       (NoArg (setGeneralFlag Opt_PluginTrustworthy))
   , make_ord_flag defGhcFlag "fplugin"     (hasArg addPluginModuleName)
