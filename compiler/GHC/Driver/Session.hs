@@ -3426,6 +3426,7 @@ fFlagsDeps = [
   flagSpec "enable-th-splice-warnings"        Opt_EnableThSpliceWarnings,
   flagSpec "error-spans"                      Opt_ErrorSpans,
   flagSpec "excess-precision"                 Opt_ExcessPrecision,
+  flagSpec "default-inlinable"                Opt_DefaultInlinable,
   flagSpec "expose-all-unfoldings"            Opt_ExposeAllUnfoldings,
   flagSpec "expose-internal-symbols"          Opt_ExposeInternalSymbols,
   flagSpec "external-dynamic-refs"            Opt_ExternalDynamicRefs,
@@ -3836,6 +3837,7 @@ defaultFlags settings
       Opt_RPath,
       Opt_DumpWithWays,
       Opt_CompactUnwind,
+      Opt_DefaultInlinable, -- See Note [Default INLINABLE pragmas] in GHC.Tc.Module
       Opt_ShowErrorContext,
       Opt_SuppressStgReps
     ]
