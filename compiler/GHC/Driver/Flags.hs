@@ -681,6 +681,7 @@ data GeneralFlag
    | Opt_IgnoreInterfacePragmas
    | Opt_OmitInterfacePragmas
    | Opt_KeepInterfacePragmas -- See Note [Keep interface pragmas] in GHC.Driver.Session
+   | Opt_DefaultInlinable     -- See Note [Default INLINABLE pragmas] in GHC.Tc.Module
    | Opt_ExposeAllUnfoldings
    | Opt_ExposeOverloadedUnfoldings
    | Opt_KeepAutoRules -- ^Keep auto-generated rules even if they seem to have become useless

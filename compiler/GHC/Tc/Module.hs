@@ -145,6 +145,7 @@ import GHC.Types.Name.Env
 import GHC.Types.Name.Set
 import GHC.Types.Avail
 import GHC.Types.Basic hiding( SuccessFlag(..) )
+import GHC.Types.SourceText ( SourceText(..) )
 import GHC.Types.Annotations
 import GHC.Types.SrcLoc
 import GHC.Types.SourceFile
@@ -358,6 +359,8 @@ tcRnModuleTcRnM hsc_env mod_sum
                         -- Ensure plugins run with the same tcg_env that we pass in
                       ; setGblEnv tcg_env
                         $ do { tcg_env <- runTypecheckerPlugin mod_sum tcg_env
+                             ; -- See Note [Default INLINABLE pragmas]
+                               tcg_env <- add_inlinable_prags tcg_env
                              ; -- Dump output and return
                                tcDump tcg_env
                              ; return tcg_env
@@ -3219,6 +3222,87 @@ runTypecheckerPlugin sum gbl_env = do
       (\p opts env -> mark_plugin_unsafe (hsc_dflags hsc_env)
                         >> typeCheckResultAction p opts sum env)
       gbl_env
+
+-- Note [Default INLINABLE pragmas]
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- The Plinth compiler (plinthc) does whole-program compilation: it
+-- translates to Plutus Core the unfoldings of all the imported definitions
+-- that a script uses. Without a pragma, GHC puts the unfolding of a binding
+-- in the interface file only if the binding is small. With an INLINABLE
+-- pragma, GHC always puts the unoptimised RHS of the binding there.
+--
+-- Thus, with -fdefault-inlinable (on by default), after typechecking (and
+-- after the typechecker plugins) we give an INLINABLE pragma to each
+-- top-level binding that has no user-written inline pragma:
+--
+--    f x = e         ==>    {-# INLINABLE f #-}
+--                           f x = e
+--
+-- A NOINLINE pragma with a phase only controls when GHC can inline the
+-- binding (e.g. to let RULES fire first). base uses it a lot: e.g.
+-- {-# NOINLINE [0] map #-}. We change it to an INLINABLE pragma with the
+-- same phase, so that the interface file has the unfolding:
+--
+--    {-# NOINLINE [1] f #-}  ==>    {-# INLINABLE [1] f #-}
+--
+-- We change the binders of FunBind, VarBind, PatSynBind and the exports
+-- and binds of AbsBinds. We keep all other pragmas: INLINE, INLINABLE,
+-- OPAQUE and NOINLINE without a phase. Thus a NOINLINE (without a phase)
+-- or OPAQUE pragma still hides a definition from Plinth. DFuns have
+-- dfunInlinePragma (CONLIKE), so we do not change them.
+--
+-- We do this in the compiler, not in the Plinth plugin, because the
+-- compiler that builds the boot libraries (hadrian's stage-1 compiler) has
+-- no Plinth plugin. With this pass, all the boot libraries get the same
+-- INLINABLE pragmas as user code.
+--
+-- hs-boot files and signatures have no value bindings, so the pass does
+-- nothing for them.
+--
+-- Cost: an interface file has the unoptimised unfolding of each such
+-- binding, and GHC can specialise each overloaded binding at its call
+-- sites in other modules. The interface files and the compile times are
+-- larger.
+
+add_inlinable_prags :: TcGblEnv -> TcM TcGblEnv
+add_inlinable_prags tcg_env = do
+  enabled <- goptM Opt_DefaultInlinable
+  if not enabled
+    then return tcg_env
+    else return (tcg_env { tcg_binds = map add_bind (tcg_binds tcg_env) })
+  where
+    add_bind :: LHsBind GhcTc -> LHsBind GhcTc
+    add_bind (L loc bind) = L loc $ case bind of
+      FunBind { fun_id = L id_loc v }
+        -> bind { fun_id = L id_loc (add_prag v) }
+      VarBind { var_id = v }
+        -> bind { var_id = add_prag v }
+      PatSynBind x psb@PSB { psb_id = L id_loc v }
+        -> PatSynBind x psb { psb_id = L id_loc (add_prag v) }
+      XHsBindsLR ab@AbsBinds { abs_exports = exports, abs_binds = binds }
+        -> XHsBindsLR ab
+             { abs_exports = map add_export exports
+             , abs_binds   = map add_bind binds }
+      _ -> bind
+
+    add_export :: ABExport -> ABExport
+    add_export abe = abe { abe_poly = add_prag (abe_poly abe) }
+
+    add_prag :: Id -> Id
+    add_prag v
+      | isDefaultInlinePragma prag
+      = v `setInlinePragma` defaultInlinePragma { inl_src    = NoSourceText
+                                                , inl_inline = inlinable }
+      | NoInline {} <- inlinePragmaSpec prag
+      , not (isNeverActive (inlinePragmaActivation prag))
+      = v `setInlinePragma` prag { inl_inline = inlinable }
+      | otherwise
+      = v
+      where
+        prag = idInlinePragma v
+
+    inlinable :: InlineSpec
+    inlinable = Inlinable NoSourceText
 
 mark_plugin_unsafe :: DynFlags -> TcM ()
 mark_plugin_unsafe dflags = unless (gopt Opt_PluginTrustworthy dflags) $

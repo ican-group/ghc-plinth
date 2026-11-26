@@ -1178,6 +1178,7 @@ defaultFlags settings
       Opt_RPath,
       Opt_DumpWithWays,
       Opt_CompactUnwind,
+      Opt_DefaultInlinable, -- See Note [Default INLINABLE pragmas] in GHC.Tc.Module
       Opt_ShowErrorContext,
       Opt_SuppressStgReps,
       Opt_UnoptimizedCoreForInterpreter,

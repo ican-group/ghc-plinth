@@ -2460,6 +2460,7 @@ fFlagsDeps = [
   flagSpec "enable-th-splice-warnings"        Opt_EnableThSpliceWarnings,
   flagSpec "error-spans"                      Opt_ErrorSpans,
   flagSpec "excess-precision"                 Opt_ExcessPrecision,
+  flagSpec "default-inlinable"                Opt_DefaultInlinable,
   flagSpec "expose-all-unfoldings"            Opt_ExposeAllUnfoldings,
   flagSpec "expose-overloaded-unfoldings"     Opt_ExposeOverloadedUnfoldings,
   flagSpec "keep-auto-rules"                  Opt_KeepAutoRules,
