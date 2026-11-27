@@ -3268,6 +3268,10 @@ runTypecheckerPlugin sum gbl_env = do
 -- binding, and GHC can specialise each overloaded binding at its call
 -- sites in other modules. The interface files and the compile times are
 -- larger.
+--
+-- Exception: hadrian builds the ghc library with -fno-default-inlinable
+-- (see Settings.Packages). Plinth scripts do not use it, and the pass more
+-- than doubles the size of its interface files.
 
 add_inlinable_prags :: TcGblEnv -> TcM TcGblEnv
 add_inlinable_prags tcg_env = do
