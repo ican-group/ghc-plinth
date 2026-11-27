@@ -65,6 +65,9 @@ packageArgs = do
             -- Enable -haddock and -Winvalid-haddock for the compiler
             , arg "-haddock"
             , notStage0 ? arg "-Winvalid-haddock"
+            -- See Note [Default INLINABLE pragmas] in GHC.Tc.Module. The
+            -- boot compiler (stage 0) does not know this flag.
+            , notStage0 ? arg "-fno-default-inlinable"
             -- These files take a very long time to compile with -O1,
             -- so we use -O0 for them just in Stage0 to speed up the
             -- build but not affect Stage1+ executables
